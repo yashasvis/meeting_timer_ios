@@ -1,0 +1,49 @@
+name: ios_calendar_demo
+description: "A new Flutter project."
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.3
+  aad_oauth: ^1.0.1
+  dio: ^5.9.0
+  visuals_calendar: ^0.0.4
+  intl: ^0.19.0
+  flutter_html: ^3.0.0-beta.2
+  html: ^0.15.4
+  url_launcher: ^6.3.1
+  flutter_background_service: ^5.0.10
+  permission_handler: ^11.0.0
+  circular_countdown_timer: ^0.2.4
+  flutter_local_notifications: ^18.0.1
+  flutter_launcher_icons: ^0.14.4
+  keep_screen_on: ^4.0.0
+  connectivity_plus: ^6.1.0
+
+flutter_launcher_icons:
+  ios: true
+  android: "launcher_icon"
+  image_path: "Asset/icon/icons.jpg"
+  adaptive_icon_foreground: "Asset/icon/icons.jpg"
+  adaptive_icon_background: "#FFFFFF"
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - Asset/icon/icon.png
+    - Asset/no-connection.webp

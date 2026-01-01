@@ -1,0 +1,407 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import 'components/canvas/calendar_section.dart';
+import 'components/canvas/hours.dart';
+import 'defaults/action_menu.dart';
+import 'functions/focused_day.dart';
+import 'functions/max_daily_events.dart';
+import 'functions/page_index.dart';
+import 'theme.dart';
+import 'types/calendar_format.types.dart';
+import 'types/event.types.dart';
+
+/// A Flutter Visuals Calendar Widget.
+/// Displays a calendar with a header that shows the current month.
+/// The calendar can be displayed in day or week format.
+/// params [Event] The events to display.
+/// params [CalendarFormat] The calendar format. [day, week]
+/// params [Widget] The event tile builder.
+/// params [AppBar] The app bar builder.
+class VisualsCalendar extends StatefulWidget {
+  // Optional loading state.
+  final bool? loading;
+  // The events.
+  final List<Event>? events;
+  // Future events
+  final Future<List<Event>>? futureEvents;
+  // The calendar format. [day, week]
+  final CalendarFormat defaultFormat;
+  // The event tile builder.
+  final Widget Function(BuildContext context, Event event)? eventBuilder;
+  // App bar builder.
+  final AppBar Function(
+    BuildContext context,
+    String currentMonth,
+    CalendarFormat selectedFormat,
+    void Function() setToday,
+    void Function(CalendarFormat) setFormat,
+    List<CalendarFormat> avalableFormats,
+  )? appBarBuilder;
+  // Enable selection for creating a new event.
+  final bool? selectionEnabled;
+  // Callback for selecting time to create a new event.
+  final void Function(DateTime start, DateTime end)? onTimeSelected;
+
+  final void Function(DateTime start, DateTime end)? onPageChanged;
+  // Style
+  final CalendarStyle? style;
+  // Optional drawer for the calendar.
+  final Widget? drawer;
+  // Optionan end drawer for the calendar.
+  final Widget? endDrawer;
+
+  const VisualsCalendar({
+    super.key,
+    required this.defaultFormat,
+    this.loading,
+    this.events,
+    this.futureEvents,
+    this.eventBuilder,
+    this.appBarBuilder,
+    this.selectionEnabled,
+    this.onTimeSelected,
+    this.style,
+    this.drawer,
+    this.endDrawer,
+    this.onPageChanged,
+  });
+
+  @override
+  State<StatefulWidget> createState() => VisualsCalendarState();
+}
+
+class VisualsCalendarState extends State<VisualsCalendar> {
+  // Initialize the events.
+  List<Event> events = [];
+
+  // Future events
+  late Future<List<Event>> futureEvents;
+
+  // The loading state.
+  bool loading = false;
+
+  // Initialize the focused month, used for displaying month in focus.
+  String focusedMonth = DateFormat.MMMM().format(DateTime.now());
+
+  // Initialize the calendar format.
+  late CalendarFormat _calendarFormat;
+
+  // Initialize the page controller
+  late PageController pageController;
+
+  // The page index
+  late int pageIndex;
+
+  // Main scroll controller
+  final ScrollController _mainController = ScrollController(
+    initialScrollOffset: 750,
+  );
+
+  // The scroll base, used for directional scaling.
+  double _scrollBase = 1450;
+
+  // Default container height, used for directional scaling.
+  double _containerHeight = 17000;
+
+  // Default base height, used for directional scaling.
+  double _baseHeight = 1200.0;
+
+  // Set the daily expanded state.
+  bool dailyExpanded = false;
+
+  // Set the max daily events.
+  int maxDailyEvents = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Set the calendar format.
+    _calendarFormat = widget.defaultFormat;
+
+    // Set the page index.
+    pageIndex = getPageIndex(_calendarFormat);
+
+    // Initialize the page controller.
+    pageController = PageController(
+      keepPage: false,
+      initialPage: pageIndex,
+      viewportFraction: 1 / calendarFormatInts[widget.defaultFormat]!,
+    );
+
+    // Set the events
+    if (widget.events != null) {
+      events = widget.events!;
+      setState(() {
+        maxDailyEvents = getMaxDailyEvents(events, pageIndex, _calendarFormat);
+      });
+    }
+    // Set the future events.
+    if (widget.futureEvents != null) {
+      futureEvents = widget.futureEvents!;
+      loading = true;
+      futureEvents.then((value) {
+        setState(() {
+          events = value;
+          loading = false;
+          maxDailyEvents =
+              getMaxDailyEvents(events, pageIndex, _calendarFormat);
+        });
+      });
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      jumpToHour(DateTime.now());
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant VisualsCalendar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.events != null && widget.events != oldWidget.events) {
+      setState(() {
+        events = widget.events!;
+        maxDailyEvents = getMaxDailyEvents(events, pageIndex, _calendarFormat);
+      });
+    }
+    if (widget.futureEvents != null &&
+        widget.futureEvents != oldWidget.futureEvents) {
+      loading = true;
+      futureEvents = widget.futureEvents!;
+      futureEvents.then((value) {
+        setState(() {
+          events = value;
+          loading = false;
+          maxDailyEvents =
+              getMaxDailyEvents(events, pageIndex, _calendarFormat);
+        });
+      });
+    }
+  }
+
+  void jumpToHour(DateTime date) {
+    if (!_mainController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => jumpToHour(date));
+      return;
+    }
+
+    // Total container height for 24 hours
+    final double totalHeight = _containerHeight + 1600; // e.g., 17000
+    final double totalHours = 24.0;
+
+    // Fraction of the day to scroll
+    final double fractionOfDay =
+        (date.hour + date.minute / 60.0) / totalHours;
+
+    // Actual scroll offset in pixels
+    final double offset = fractionOfDay * totalHeight;
+
+    _mainController.jumpTo(offset);
+  }
+
+  // Set the calendar format.
+  void setFormat(CalendarFormat format) {
+    setState(() {
+      _calendarFormat = format;
+    });
+
+    pageController = PageController(
+      keepPage: false,
+      initialPage: getPageIndex(format),
+      viewportFraction: 1 / calendarFormatInts[format]!,
+    );
+  }
+
+  // Set the page to the current date.
+  void setToday() {
+    pageController.animateToPage(
+      100,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  // Set the daily expanded state.
+  void setDailyExpanded() {
+    setState(() {
+      dailyExpanded = !dailyExpanded;
+    });
+  }
+
+  // Set the page index, updated when page is changed.
+  void setPageIndex(int index) {
+    setState(() {
+      pageIndex = index;
+      maxDailyEvents = getMaxDailyEvents(events, index, _calendarFormat);
+      focusedMonth =
+          DateFormat.MMMM().format(getFocusedDate(index, _calendarFormat));
+    });
+
+    // 🔥 Call parent callback
+    if (widget.onPageChanged != null) {
+      final focusedDate = getFocusedDate(index, _calendarFormat);
+
+      DateTime startDate;
+      DateTime endDate;
+
+      if (_calendarFormat == CalendarFormat.day) {
+        startDate = DateTime(
+            focusedDate.year, focusedDate.month, focusedDate.day, 0, 0);
+        endDate = startDate.add(const Duration(days: 1));
+      } else if (_calendarFormat == CalendarFormat.week) {
+        startDate =
+            focusedDate.subtract(Duration(days: focusedDate.weekday - 1));
+        endDate = startDate.add(const Duration(days: 7));
+      } else {
+        // fallback (3-days or others)
+        startDate = focusedDate.subtract(const Duration(days: 1));
+        endDate = focusedDate.add(const Duration(days: 1));
+      }
+
+      widget.onPageChanged!(startDate, endDate);
+    }
+  }
+
+  /// Return the page index that corresponds to the given date.
+  /// This uses the same page-size logic as the widget: a page contains
+  /// `calendarFormatInts[_calendarFormat]` days.
+  int getPageIndexForDate(DateTime date) {
+    // normalize date to midnight for comparison
+    final DateTime target = DateTime(date.year, date.month, date.day);
+
+    // focused date of current pageIndex (uses your imported helper)
+    final DateTime focused = getFocusedDate(pageIndex, _calendarFormat);
+    final DateTime focusedDay =
+        DateTime(focused.year, focused.month, focused.day);
+
+    final int daysPerPage = calendarFormatInts[_calendarFormat] ?? 1;
+
+    // difference in days between target and current focused day
+    final int diffDays = target.difference(focusedDay).inDays;
+
+    // how many pages to move (round is OK; you may use floor depending on desired behaviour)
+    final int pageOffset = (diffDays / daysPerPage).round();
+
+    final int targetPage = pageIndex + pageOffset;
+    // Ensure not negative
+    return targetPage < 0 ? 0 : targetPage;
+  }
+
+  /// Jump/animate the calendar to show the given date.
+  /// It computes the right target page and animates the PageController.
+  /// It also updates internal state (pageIndex, focusedMonth).
+  void jumpToDate(DateTime date) {
+    final int targetPage = getPageIndexForDate(date);
+
+    if (!pageController.hasClients) {
+      // Wait for the next frame if not attached yet
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        jumpToDate(date);
+      });
+      return;
+    }
+
+    pageController.animateToPage(
+      targetPage,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+    );
+
+    setPageIndex(targetPage);
+  }
+
+  // Update the container size based on the vertical scale from pinch zoom.
+  void _updateContainerSize(double verticalScale) {
+    // Jump to the new position based on the vertical scale.
+    _mainController
+        .jumpTo(_scrollBase + (_baseHeight / 2) * (verticalScale - 1));
+
+    // Calculate the new height based on the vertical scale.
+    final newHeight = _baseHeight * verticalScale;
+
+    setState(() {
+      if (newHeight < 1200) {
+        // Set the min height to 800 px.
+        _containerHeight = 1200;
+        return;
+      }
+      if (newHeight > 4800) {
+        // Set the max height to 3000 px.
+        _containerHeight = 4800;
+        return;
+      }
+      _containerHeight = newHeight;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: widget.drawer,
+      endDrawer: widget.endDrawer,
+      appBar: widget.appBarBuilder != null
+          ? widget.appBarBuilder!(
+              context,
+              focusedMonth,
+              _calendarFormat,
+              setToday,
+              setFormat,
+              calendarFormatInts.keys.toList(),
+            )
+          : AppBar(
+              centerTitle: false,
+              title: Text(focusedMonth),
+              actions: getActions(setToday, setFormat),
+              forceMaterialTransparency: true,
+              backgroundColor: widget.style?.headerColor,
+              automaticallyImplyLeading: true,
+            ),
+      body: Column(
+        children: [
+          if (widget.loading ?? loading)
+            const LinearProgressIndicator(backgroundColor: Colors.transparent),
+          Expanded(
+            child: Row(
+              children: [
+                HourColumn(
+                  focusedDate: getFocusedDate(pageIndex, _calendarFormat),
+                  calendarFormat: _calendarFormat,
+                  height: _containerHeight,
+                  scrollController: _mainController,
+                  setDailyExpanded: setDailyExpanded,
+                  maxDailyEvents: maxDailyEvents,
+                  isDailyExpanded: dailyExpanded,
+                  style: widget.style,
+                  loading: loading,
+                ),
+                Expanded(
+                  child: CalendarSection(
+                    events: events,
+                    calendarFormat: _calendarFormat,
+                    pageController: pageController,
+                    mainController: _mainController,
+                    onScaleUpdate: (ScaleUpdateDetails details) {
+                      _updateContainerSize(details.verticalScale);
+                    },
+                    onScaleStart: (ScaleStartDetails details) {
+                      _baseHeight = _containerHeight;
+                      _scrollBase = _mainController.offset;
+                    },
+                    onPageChanged: setPageIndex,
+                    maxDailyEvents: maxDailyEvents,
+                    dailyEventsExpanded: dailyExpanded,
+                    height: _containerHeight + 2000,
+                    style: widget.style,
+                    selectionEnabled: widget.selectionEnabled ?? false,
+                    onTimeSelected: widget.onTimeSelected,
+                    loading: loading,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1040630822914",
+    "project_id": "ioscalendarapplication",
+    "storage_bucket": "ioscalendarapplication.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1040630822914:android:bda7d903ca14075d848f1b",
+        "android_client_info": {
+          "package_name": "com.contabo.ios_calendar_demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCajjLZ1XPRPfXjd1PPeAMWfmZqgU8eqW4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
