@@ -172,6 +172,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     checkFirstSeen();
+
+    if (Platform.isIOS) {
+      Timer.periodic(
+        const Duration(seconds: 5),
+            (_) => fetchUpcomingMeeting(),
+      );
+    }
   }
 
   @override
@@ -364,4 +371,58 @@ void onStart(ServiceInstance service) async {
       }
     }
   });
+}
+
+Future<void> fetchUpcomingMeeting() async {
+  SharedPreferences preferences = await SharedPreferences.getInstance();
+
+  final Config config = Config(
+    tenant: "common",
+    clientId: "fd5ccd50-5603-4e29-b149-2bedc44a3a89",
+    scope: "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
+    navigatorKey: navigatorKey,
+    redirectUri: ThemeModel.baseUrl,
+    prompt: "consent",
+  );
+
+  final AadOAuth oauth = AadOAuth(config);
+  final token = await oauth.getAccessToken();
+  if (token == null) return;
+
+  DateTime start = DateTime.now();
+  DateTime end = DateTime.now().add(const Duration(minutes: 5));
+
+  final dio = Dio();
+  final response = await dio.get(
+    "https://graph.microsoft.com/v1.0/me/calendarView"
+        "?startDateTime=${start.toUtc().toIso8601String()}"
+        "&endDateTime=${end.toUtc().toIso8601String()}",
+    options: Options(headers: {"Authorization": "Bearer $token"}),
+  );
+
+  final events = (response.data['value'] as List)
+      .map((e) => CalendarEventsModel.fromJson(e))
+      .toList();
+
+  if (events.isEmpty) return;
+
+  final e = events.first;
+
+  eventStartDate = DateTime.parse(e.start['dateTime'] + "Z");
+  eventEndDate = DateTime.parse(e.end['dateTime'] + "Z");
+
+  preferences.setString('eventStartDate', eventStartDate.toString());
+  preferences.setString('eventEndDate', eventEndDate.toString());
+
+  if (navigatorKey.currentState != null) {
+    countdownNotifier.value =
+        eventStartDate!.difference(DateTime.now());
+
+    navigatorKey.currentState!.push(
+      MaterialPageRoute(
+        builder: (_) =>
+            CountdownWidget(countdownNotifier, navigatorKey),
+      ),
+    );
+  }
 }
