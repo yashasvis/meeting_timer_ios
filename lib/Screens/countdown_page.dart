@@ -98,7 +98,9 @@ class _CountdownWidgetState extends State<CountdownWidget> {
   }
   @override
   void initState() {
-    KeepScreenOn.turnOn();
+    if (Platform.isAndroid) {
+      KeepScreenOn.turnOn();
+    }
     initConnectivity();
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
@@ -172,7 +174,9 @@ class _CountdownWidgetState extends State<CountdownWidget> {
   @override
   void dispose() {
     _timer.cancel();
-    KeepScreenOn.turnOff();
+    if (Platform.isAndroid) {
+      KeepScreenOn.turnOff();
+    }
     _connectivitySubscription.cancel();
     super.dispose();
   }
@@ -210,11 +214,15 @@ class _CountdownWidgetState extends State<CountdownWidget> {
       canPop: false,
       onPopInvokedWithResult: (didPop,result){
         if (didPop) return;
-        final service = FlutterBackgroundService();
-        service.invoke("stopService");
-        exit(1);
+        if (Platform.isAndroid) {
+          final service = FlutterBackgroundService();
+          service.invoke("stopService");
+          exit(0);
+        } else {
+          Navigator.of(context).pop();
+        }
       },
-      child: _connectionStatus.index != 4 ? Scaffold(
+      child: _connectionStatus != ConnectivityResult.none ? Scaffold(
         backgroundColor: Colors.white,
         body: Center(
           child: Column(

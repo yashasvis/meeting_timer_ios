@@ -19,6 +19,10 @@ import 'package:html/parser.dart' as html;
 
 import 'Model/calendar_events_model.dart';
 import 'Model/app_theme.dart';
+import 'dart:io' show Platform;
+import 'package:timezone/data/latest.dart' as tz;
+
+import 'NotificationService.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 List<String> lastShownNotification = [];
@@ -41,8 +45,14 @@ void main() async{
 
   await initializeServices();
 
-  FlutterBackgroundService().startService();
-  FlutterBackgroundService().invoke('setAsForeground');
+  if (Platform.isAndroid) {
+    FlutterBackgroundService().startService();
+    FlutterBackgroundService().invoke('setAsForeground');
+  }
+  else{
+    tz.initializeTimeZones();
+    await NotificationService.init();
+  }
 
   runApp(const MyApp());
 }

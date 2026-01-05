@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:aad_oauth/aad_oauth.dart';
 import 'package:aad_oauth/model/config.dart';
@@ -31,7 +32,9 @@ class _LoginPage extends State<LoginPage> {
 
   @override
   void initState() {
-    KeepScreenOn.turnOn();
+    if (Platform.isAndroid) {
+      KeepScreenOn.turnOn();
+    }
     cleanPreferences();
     initConnectivity();
     _connectivitySubscription =
@@ -41,7 +44,9 @@ class _LoginPage extends State<LoginPage> {
 
   @override
   void dispose() {
-    KeepScreenOn.turnOff();
+    if (Platform.isAndroid) {
+      KeepScreenOn.turnOff();
+    }
     _connectivitySubscription.cancel();
     super.dispose();
   }
@@ -73,7 +78,7 @@ class _LoginPage extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _connectionStatus.index != 4 ? Scaffold(
+    return _connectionStatus != ConnectivityResult.none ? Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
