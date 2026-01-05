@@ -418,11 +418,35 @@ Future<void> fetchUpcomingMeeting() async {
     countdownNotifier.value =
         eventStartDate!.difference(DateTime.now());
 
-    navigatorKey.currentState!.push(
-      MaterialPageRoute(
-        builder: (_) =>
-            CountdownWidget(countdownNotifier, navigatorKey),
-      ),
-    );
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.reload();
+
+    String loggedDate = preferences.getString('LoggedDate') ?? '';
+    if(loggedDate != ""){
+      DateTime dateTime = DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
+      if(dateTime.isAfter(DateTime.parse(loggedDate))){
+        preferences.remove('LoggedDate');
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => LoginPage(navigatorKey)),
+        );
+      }
+    }
+
+    if(eventStartDate != null) {
+      if (!DateTime.now().isAfter(eventStartDate!)) {
+        DateTime eventStart = eventStartDate!.toLocal();
+        countdownNotifier.value = eventStart.difference(DateTime.now());
+      }
+    }
+
+    preferences.reload();
+    if(!preferences.containsKey('alreadyRedirected')){
+      preferences.setBool('alreadyRedirected', true);
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => CountdownWidget(countdownNotifier, navigatorKey),
+        ),
+      );
+    }
   }
 }
