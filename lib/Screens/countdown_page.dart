@@ -466,6 +466,7 @@ class _CountdownWidgetState extends State<CountdownWidget> {
                       preference.setBool('isTimerShown', false);
                       preference.setBool('hasNextMeetingAdded', false);
                       preference.setBool('isMeetingRunningOver', false);
+                      preference.remove('alreadyRedirected');
 
                       widget.navigatorKey.currentState?.push(
                         MaterialPageRoute(
