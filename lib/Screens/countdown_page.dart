@@ -169,6 +169,8 @@ class _CountdownWidgetState extends State<CountdownWidget> {
           }
         }
       }
+
+      print("subject : $subject");
     });
   }
   @override

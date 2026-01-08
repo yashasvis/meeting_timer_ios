@@ -410,7 +410,56 @@ Future<void> fetchUpcomingMeeting() async {
 
   eventStartDate = DateTime.parse(e.start['dateTime'] + "Z");
   eventEndDate = DateTime.parse(e.end['dateTime'] + "Z");
+  if(e.isDraft == false && !lastShownNotification.contains(e.id)){
+    var location = "";
+    var content = e.body['content'];
+    bool isMeetingJoining = false;
+    if(content.toString().contains("Join online meeting")){
+      dom.Document document = html.parse(content.toString());
 
+      document.body!.querySelectorAll("*").forEach((element) {
+        if (element.text.contains("Join online meeting")) {
+          element.remove();
+          isMeetingJoining = true;
+        }
+        if (element.text.contains("..............")) {
+          element.remove();
+        }
+      });
+
+      content = document.body!.innerHtml;
+    }
+    if(e.location.isNotEmpty){
+      var locations = e.location.containsKey('displayName') ? true : false;
+      var meeting = locations ? e.location['displayName'] : "";
+      location = meeting;
+    }
+
+    if(isMeetingJoining){
+      var meetingUrl = e.onlineMeeting!['joinUrl'];
+      preferences.setString('meetingUrl',meetingUrl);
+    }
+    else{
+      preferences.remove('meetingUrl');
+    }
+
+    preferences.setString('meetingTitle', location);
+    preferences.setString('content', content);
+    preferences.setString('subject', e.subject);
+
+    lastShownNotification.add(e.id);
+
+    eventStartDate = DateTime.parse(e.start['dateTime']+"Z");
+    eventEndDate = DateTime.parse(e.end['dateTime']+"Z");
+
+    preferences.setString('eventEndDate', eventEndDate.toString());
+    preferences.setString('eventStartDate', eventStartDate.toString());
+
+    bool hasScheduleWorkStarted = preferences.getBool('HasScheduleWorkStarted') ?? false;
+    if(hasScheduleWorkStarted){
+      preferences.setBool('HasNextMeetingAdded',true);
+    }
+  }
   preferences.setString('eventStartDate', eventStartDate.toString());
   preferences.setString('eventEndDate', eventEndDate.toString());
 
