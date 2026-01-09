@@ -3,23 +3,22 @@ name: Upload Flutter iOS app to TestFlight
 on: 
   push: 
     branches: 
-      - main   # change if needed 
+      - main 
  
 jobs: 
   build: 
     runs-on: macos-14 
-
-    env:                     # <- HERE 
+    env: 
       WORKSPACE: ios/Runner.xcworkspace 
-      SCHEME: Runner
+      SCHEME: Runner 
  
     steps: 
       - name: Checkout 
         uses: actions/checkout@v4 
-
+ 
       - name: Configure Git to access private repos 
         run: | 
-          git config --global url."https://${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}:@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}:@github.com/".insteadOf "https://github.com/" 
  
       - name: Set up Flutter 
         uses: subosito/flutter-action@v2 
@@ -44,13 +43,13 @@ jobs:
  
       - name: Archive app 
         run: | 
-            xcodebuild archive \ 
-               -workspace ios/Runner.xcworkspace \ 
-               -scheme Runner \ 
-               -configuration Release \ 
-               -archivePath build/Runner.xcarchive \ 
-               -destination 'generic/platform=iOS' \ 
-               CODE_SIGNING_ALLOWED=YES
+          xcodebuild clean archive \ 
+            -workspace $WORKSPACE \ 
+            -scheme $SCHEME \ 
+            -configuration Release \ 
+            -archivePath build/Runner.xcarchive \ 
+            -destination "generic/platform=iOS" \ 
+            CODE_SIGNING_ALLOWED=YES 
  
       - name: Upload to TestFlight 
         uses: apple-actions/upload-testflight-build@v1 
