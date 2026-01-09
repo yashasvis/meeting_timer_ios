@@ -28,6 +28,9 @@ jobs:
       - name: Build IPA for TestFlight
         run: flutter build ipa --export-method app-store --no-codesign
 
+      - name: List IPA files
+        run: ls -R build/ios/ipa
+
       - name: Upload IPA to TestFlight
         uses: apple-actions/upload-testflight-build@v1
         with:
