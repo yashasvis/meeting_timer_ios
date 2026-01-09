@@ -11,7 +11,7 @@ environment:
 dependencies:
   visuals_calendar: 
     git: 
-      url: https://x-access-token:${GH_PERSONAL_ACCESS_TOKEN}@github.com/yashasvis/visuals_calendar.git
+      url: https://github.com/yashasvis/visuals_calendar.git
       ref: main
       
   flutter:
