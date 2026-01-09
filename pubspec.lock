@@ -832,10 +832,11 @@ packages:
   visuals_calendar:
     dependency: "direct main"
     description:
-      name: visuals_calendar
-      sha256: "1f3ab3949a0b15c0b0de3df03c3eeab28071814d67e08e80e2f328925d912e3b"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: main
+      resolved-ref: f5b2e8f56d5cc7ffbbbc2ee0be8b39cb0a265ddd
+      url: "https://github.com/yashasvis/visuals_calendar.git"
+    source: git
     version: "0.0.4"
   vm_service:
     dependency: transitive
