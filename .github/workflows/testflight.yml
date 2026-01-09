@@ -9,37 +9,26 @@ jobs:
   build:
     runs-on: macos-14
 
-    env:
-      # Flutter workspace & scheme (optional, used by Flutter)
-      WORKSPACE: ios/Runner.xcworkspace
-      SCHEME: Runner
-
     steps:
-      # Step 1: Checkout repo
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Step 2: Configure access to private GitHub fork
       - name: Configure Git for private packages
         run: |
           git config --global url."https://${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}:@github.com/".insteadOf "https://github.com/"
 
-      # Step 3: Setup Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.38.6"
 
-      # Step 4: Install Flutter dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      # Step 5: Build IPA for TestFlight (automatic signing via App Store Connect API key)
       - name: Build IPA for TestFlight
-        run: flutter build ipa --export-method app-store
-        
-      # Step 6: Upload IPA to TestFlight
-      - name: Upload to TestFlight
+        run: flutter build ipa --export-method app-store --no-codesign
+
+      - name: Upload IPA to TestFlight
         uses: apple-actions/upload-testflight-build@v1
         with:
           app-path: build/ios/ipa/Runner.ipa
