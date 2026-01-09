@@ -9,6 +9,11 @@ environment:
   sdk: ">=3.4.1 <4.0.0"
 
 dependencies:
+  visuals_calendar: 
+    git: 
+      url: https://x-access-token:${GH_PERSONAL_ACCESS_TOKEN}@github.com/yashasvis/visuals_calendar.git
+      ref: main
+      
   flutter:
     sdk: flutter
 
@@ -16,7 +21,6 @@ dependencies:
   shared_preferences: ^2.5.3
   aad_oauth: ^1.0.1
   dio: ^5.9.0
-  visuals_calendar: ^0.0.4
   intl: ^0.19.0
   flutter_html: ^3.0.0-beta.2
   html: ^0.15.4
