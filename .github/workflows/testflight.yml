@@ -40,13 +40,13 @@ jobs:
  
       - name: Archive app 
         run: | 
-          xcodebuild archive \ 
-            -workspace ios/Runner.xcworkspace \ 
-            -scheme Runner \ 
-            -configuration Release \ 
-            -archivePath build/Runner.xcarchive \ 
-            -destination 'generic/platform=iOS' \ 
-            CODE_SIGNING_ALLOWED=YES 
+             xcodebuild archive \ 
+               -workspace ios/Runner.xcworkspace \ 
+               -scheme Runner \ 
+               -configuration Release \ 
+               -archivePath build/Runner.xcarchive \ 
+               -destination 'generic/platform=iOS' \ 
+               CODE_SIGNING_ALLOWED=YES
  
       - name: Upload to TestFlight 
         uses: apple-actions/upload-testflight-build@v1 
