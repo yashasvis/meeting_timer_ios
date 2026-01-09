@@ -8,6 +8,10 @@ on:
 jobs: 
   build: 
     runs-on: macos-14 
+
+    env:                     # <- HERE 
+      WORKSPACE: ios/Runner.xcworkspace 
+      SCHEME: Runner
  
     steps: 
       - name: Checkout 
