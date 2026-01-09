@@ -35,9 +35,9 @@ jobs:
         run: flutter pub get
 
       # Step 5: Build IPA for TestFlight (automatic signing via App Store Connect API key)
-      - name: Build IPA
+      - name: Build IPA for TestFlight
         run: flutter build ipa --export-method app-store
-
+        
       # Step 6: Upload IPA to TestFlight
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v1
