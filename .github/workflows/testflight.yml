@@ -41,16 +41,22 @@ jobs:
           p12-password: ${{ secrets.KEYCHAIN_PASSWORD }} 
           provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }} 
  
-      - name: Archive app 
-        run: | 
-          xcodebuild clean archive \ 
-            -workspace $WORKSPACE \ 
-            -scheme $SCHEME \ 
-            -configuration Release \ 
-            -archivePath build/Runner.xcarchive \ 
-            -destination "generic/platform=iOS" \ 
-            CODE_SIGNING_ALLOWED=YES 
- 
+      - name: Clean Pods
+        run: |
+          cd ios
+          pod install
+          cd ..
+      
+      - name: Archive iOS app
+        run: |
+          xcodebuild clean archive \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            -destination "generic/platform=iOS" \
+            CODE_SIGNING_ALLOWED=YES
+
       - name: Upload to TestFlight 
         uses: apple-actions/upload-testflight-build@v1 
         with: 
