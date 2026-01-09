@@ -25,8 +25,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build IPA for TestFlight
-        run: flutter build ipa --export-method app-store --no-codesign
+      - name: Build IPA
+        run: flutter build ipa --release --export-method app-store
 
       - name: List IPA files
         run: ls -R build/ios/ipa
