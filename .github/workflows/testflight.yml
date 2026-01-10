@@ -34,7 +34,11 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      # 4️⃣ Import iOS certificate & provisioning profile
+      #4 Print ios certificate
+      - name: Print IOS certificate
+        run: echo ${{ secrets.IOS_CERTIFICATE }}
+
+      # 5 Import iOS certificate & provisioning profile
       - name: Import signing certificate & provisioning profile
         uses: apple-actions/import-codesign-certs@v3
         with:
