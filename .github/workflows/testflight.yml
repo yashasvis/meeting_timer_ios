@@ -80,6 +80,8 @@ jobs:
             echo "❌ IOS_PROVISION_PROFILE secret is empty"
             exit 1
           fi
+
+          echo "${{ secrets.IOS_PROVISION_PROFILE }}"
       
           echo "${{ secrets.IOS_PROVISION_PROFILE }}" | base64 --decode > profile.mobileprovision || {
             echo "❌ Failed to decode provisioning profile"
