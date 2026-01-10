@@ -81,27 +81,7 @@ jobs:
             exit 1
           fi
 
-          echo "${{ secrets.IOS_PROVISION_PROFILE }}"
-      
-          echo "${{ secrets.IOS_PROVISION_PROFILE }}" | base64 --decode > profile.mobileprovision || {
-            echo "❌ Failed to decode provisioning profile"
-            exit 1
-          }
-      
-          echo "📄 Decoded provisioning profile:"
-          file profile.mobileprovision
-      
-          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-      
-          UUID=$(security cms -D -i profile.mobileprovision | \
-            /usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin)
-      
-          cp profile.mobileprovision \
-            "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
-      
-          echo "✅ Installed provisioning profile:"
-          echo "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
-
+          echo ${{ secrets.IOS_PROVISION_PROFILE }}
 
       # Create IPA folder (ensures directory exists)
       - name: Build iOS archive
