@@ -41,8 +41,9 @@ jobs:
       - name: Install provisioning profile
         run: |
             mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-            cp ~/profile/Meeting_Timer_App_Store.mobileprovision \
-              ~/Library/MobileDevice/Provisioning\ Profiles/
+            cp ios/profiles/Meeting_Timer_App_Store.mobileprovision \
+             ~/Library/MobileDevice/Provisioning\ Profiles/
+
       - name: Verify provisioning profile installed
         run: |
           ls -la ~/Library/MobileDevice/Provisioning\ Profiles
