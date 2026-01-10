@@ -58,41 +58,9 @@ jobs:
       # 7️⃣ Build IPA (App Store)
       - name: Build IPA archive
         run: |
-          flutter build ipa --release --no-codesign
+          flutter build ipa --release 
           echo "Archive built at build/ios/archive/Runner.xcarchive"
           ls -la build/ios/archive
-      
-      - name: Export IPA for TestFlight
-        run: |
-          # Create ExportOptions.plist for App Store Connect
-          cat > ExportOptions.plist <<EOL
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" 
-          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store-connect</string>
-              <key>compileBitcode</key>
-              <false/>
-              <key>uploadBitcode</key>
-              <false/>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>teamID</key>
-              <string>WFF4J28VPZ</string> <!-- Replace with your Team ID -->
-          </dict>
-          </plist>
-          EOL
-      
-          # Export IPA
-          xcodebuild -exportArchive \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath build/ios/ipa
-      
-          echo "IPA exported:"
-          ls -la build/ios/ipa
 
       # 9️⃣ Upload to TestFlight
       - name: Upload to TestFlight
