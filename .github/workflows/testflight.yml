@@ -76,8 +76,8 @@ jobs:
       # Create IPA folder (ensures directory exists)
       - name: Build iOS archive
         run: |
-          flutter build ipa --release --no-codesign
-          ARCHIVE_PATH="build/ios/archive/Runner.xcarchive"
+          flutter build ipa --no-codesign
+          ARCHIVE_PATH="build/ios/archive/Meeting Reminder Timer.xcarchive"
           if [ -d "$ARCHIVE_PATH" ]; then
             echo "✅ Archive created at $ARCHIVE_PATH"
             ls -la "$ARCHIVE_PATH"
@@ -89,7 +89,7 @@ jobs:
       - name: Build iOS IPA
         run: |
           flutter build ipa --release --export-method app-store
-          IPA_PATH="build/ios/ipa/Runner.ipa"
+          IPA_PATH="build/ios/ipa/Meeting Reminder Timer.ipa"
           if [ -f "$IPA_PATH" ]; then
             echo "✅ IPA created at $IPA_PATH"
           else
@@ -105,7 +105,7 @@ jobs:
           echo "=============================="
       
           /usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleIdentifier" \
-            build/ios/archive/Runner.xcarchive/Info.plist || echo "❌ Archive not found"
+            build/ios/archive/Meeting Reminder Timer.xcarchive/Info.plist || echo "❌ Archive not found"
       
           echo ""
           echo "=============================="
@@ -152,7 +152,7 @@ jobs:
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v1
         with:
-          app-path: build/ios/archive/Runner.xcarchive
+          app-path: build/ios/archive/Meeting Reminder Timer.xcarchive
           api-key-id: ${{ secrets.APP_STORE_API_KEY_ID }}
           api-issuer-id: ${{ secrets.APP_STORE_API_ISSUER_ID }}
           api-private-key: ${{ secrets.APP_STORE_API_PRIVATE_KEY }}
