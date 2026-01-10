@@ -30,33 +30,20 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # 5️⃣ Install provisioning profile
-      - name: Install provisioning profile
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp ios/profiles/Meeting_Timer_App_Store.mobileprovision \
-            ~/Library/MobileDevice/Provisioning\ Profiles/
-            
-      - name: Verify provisioning profile exists
-        run: |
-          if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/Meeting_Timer_App_Store.mobileprovision ]; then
-            echo "✅ Provisioning profile exists"
-          else
-            echo "❌ Provisioning profile NOT found"
-            exit 1
-          fi
-
-      - name: Verify provisioning profile installed
-        run: ls -la ~/Library/MobileDevice/Provisioning\ Profiles
-
-      # 6️⃣ Import iOS signing certificate & provisioning profile
-      - name: Import signing certificate & provisioning profile
+      # 5️⃣ Import iOS signing certificate
+      - name: Import signing certificate
         uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.IOS_CERTIFICATE }}
           p12-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+
+      # 6️⃣ Import provisioning profile
+      - name: Import provisioning profile
+        uses: apple-actions/import-provisioning-profile@v1
+        with:
           provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
 
+      # 7️⃣ Make signing keychain default
       - name: Make signing keychain default
         run: |
           security list-keychains -d user -s \
@@ -69,16 +56,12 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" \
             "$HOME/Library/Keychains/signing_temp.keychain-db"
 
+      # 8️⃣ Verify signing identity
       - name: Verify signing identity
         run: |
           security find-identity -v -p codesigning
 
-      - name: Import provisioning profile
-        uses: apple-actions/import-provisioning-profile@v1
-        with:
-          provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
-      
-      # Create IPA folder (ensures directory exists)
+      # 9️⃣ Build iOS archive
       - name: Build iOS archive
         run: |
           flutter build ipa --no-codesign
@@ -90,7 +73,8 @@ jobs:
             echo "❌ Archive NOT found!"
             exit 1
           fi
-          
+
+      # 🔟 Build IPA
       - name: Build iOS IPA
         run: |
           flutter build ipa --release
@@ -102,47 +86,48 @@ jobs:
             exit 1
           fi
 
+      # 1️⃣1️⃣ Debug Bundle ID and Provisioning Profile
       - name: Debug Bundle ID and Provisioning Profile
         shell: bash
         run: |
           echo "=============================="
           echo "📦 Bundle ID used in archive"
           echo "=============================="
-      
           /usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleIdentifier" \
             build/ios/archive/Runner.xcarchive/Info.plist || echo "❌ Archive not found"
-      
+          
           echo ""
           echo "=============================="
           echo "📄 Provisioning profile details"
           echo "=============================="
-      
-          PROFILE_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/Meeting_Timer_App_Store.mobileprovision"
-      
+          
+          PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -n 1)
+          
           if [ ! -f "$PROFILE_PATH" ]; then
             echo "❌ Provisioning profile not found at:"
             echo "$PROFILE_PATH"
             exit 1
           fi
-      
+          
           security cms -D -i "$PROFILE_PATH" > profile.plist
-      
+          
           echo ""
           echo "🔑 application-identifier (TeamID.BundleID)"
           /usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" profile.plist
-      
+          
           echo ""
           echo "🚀 Distribution type checks"
           echo -n "get-task-allow: "
           /usr/libexec/PlistBuddy -c "Print :Entitlements:get-task-allow" profile.plist
-      
+          
           echo ""
           echo -n "ProvisionedDevices: "
           /usr/libexec/PlistBuddy -c "Print :ProvisionedDevices" profile.plist || echo "None (expected for App Store)"
-      
+          
           echo ""
           echo "=============================="
 
+      # 1️⃣2️⃣ Debug build folder
       - name: Debug build folder
         run: |
           echo "Current directory: $(pwd)"
@@ -152,8 +137,8 @@ jobs:
           ls -la build
           echo "Listing iOS archive folder:"
           ls -la build/ios/archive
-      
-      # 8️⃣ Upload to TestFlight using the archive
+          
+      # 1️⃣3️⃣ Upload to TestFlight
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v1
         with:
