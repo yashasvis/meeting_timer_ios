@@ -57,21 +57,6 @@ jobs:
           p12-password: ${{ secrets.KEYCHAIN_PASSWORD }}
           provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
 
-      - name: Install Apple Distribution certificate
-        run: |
-          echo "$IOS_CERTIFICATE" | base64 --decode > dist.p12
-      
-          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-          security set-keychain-settings -t 3600 -u build.keychain
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-      
-          security import dist.p12 \
-            -k build.keychain \
-            -P "$KEYCHAIN_PASSWORD" \
-            -T /usr/bin/codesign
-      
-          security list-keychains -s build.keychain
-
       - name: Make signing keychain default
         run: |
           security list-keychains -d user -s \
