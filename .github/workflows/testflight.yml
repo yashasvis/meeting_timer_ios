@@ -76,7 +76,7 @@ jobs:
       # Create IPA folder (ensures directory exists)
       - name: Build iOS archive
         run: |
-          flutter build ipa --no-codesign
+          flutter build ipa --release --no-codesign
           ARCHIVE_PATH="build/ios/archive/Runner.xcarchive"
           if [ -d "$ARCHIVE_PATH" ]; then
             echo "✅ Archive created at $ARCHIVE_PATH"
