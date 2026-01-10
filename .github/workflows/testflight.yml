@@ -48,6 +48,13 @@ jobs:
           p12-password: ${{ secrets.KEYCHAIN_PASSWORD }}
           provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
 
+      # Create IPA folder (ensures directory exists)
+      - name: Create IPA output folder
+        run: |
+          mkdir -p build/ios/ipa
+          echo "IPA folder created at build/ios/ipa"
+          ls -la build/ios
+
       # 7️⃣ Build IPA (App Store)
       - name: Build IPA archive
         run: |
