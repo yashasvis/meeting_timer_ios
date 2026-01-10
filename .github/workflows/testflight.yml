@@ -75,7 +75,7 @@ jobs:
      # 7️⃣ Build archive (no codesign)
       - name: Build iOS IPA
         run: |
-          flutter build ipa --release --no-codesign
+          flutter build ipa --release 
       
           # Check if IPA was created
           IPA_PATH="build/ios/ipa/Runner.ipa"
