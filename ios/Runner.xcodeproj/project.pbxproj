@@ -495,7 +495,7 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = WFF4J28VPZ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Meeting Reminder Tiimer";
+				INFOPLIST_KEY_CFBundleDisplayName = "Meeting Reminder Timer";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
