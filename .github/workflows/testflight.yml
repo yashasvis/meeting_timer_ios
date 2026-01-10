@@ -36,6 +36,15 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp ios/profiles/Meeting_Timer_App_Store.mobileprovision \
             ~/Library/MobileDevice/Provisioning\ Profiles/
+            
+      - name: Verify provisioning profile exists
+        run: |
+          if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/Meeting_Timer_App_Store.mobileprovision ]; then
+            echo "✅ Provisioning profile exists"
+          else
+            echo "❌ Provisioning profile NOT found"
+            exit 1
+          fi
 
       - name: Verify provisioning profile installed
         run: ls -la ~/Library/MobileDevice/Provisioning\ Profiles
@@ -52,12 +61,33 @@ jobs:
       - name: Create IPA output folder
         run: |
           mkdir -p build/ios/ipa
-          echo "IPA folder created at build/ios/ipa"
-          ls -la build/ios
+          echo "✅ IPA folder created at build/ios/ipa"
+          
+          # Verify folder exists
+          if [ -d build/ios/ipa ]; then
+            echo "✅ Verified: build/ios/ipa exists"
+            ls -la build/ios/ipa
+          else
+            echo "❌ build/ios/ipa was NOT created"
+            exit 1
+          fi
 
      # 7️⃣ Build archive (no codesign)
-      - name: Build IPA for TestFlight
-        run: flutter build ipa --release --no-codesign
+      - name: Build iOS IPA
+        run: |
+          flutter build ipa --release --no-codesign
+      
+          # Check if IPA was created
+          IPA_PATH="build/ios/ipa/Runner.ipa"
+          
+          if [ -f "$IPA_PATH" ]; then
+            echo "✅ IPA successfully created at $IPA_PATH"
+            ls -la build/ios/ipa
+          else
+            echo "❌ IPA NOT found! Build may have failed."
+            ls -la build/ios/ipa
+            exit 1
+          fi
 
       - name: Debug build folder
         run: |
