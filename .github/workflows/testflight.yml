@@ -1,40 +1,62 @@
-name: Upload Flutter iOS app to TestFlight
+name: iOS TestFlight
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-and-upload:
     runs-on: macos-14
 
     steps:
-      - name: Checkout
+      # 1️⃣ Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure Git for private packages
-        run: |
-          git config --global url."https://${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}:@github.com/".insteadOf "https://github.com/"
-
-      - name: Set up Flutter
+      # 2️⃣ Setup Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.38.6"
+          flutter-version: '3.19.6'
+          cache: true
 
-      - name: Install dependencies
+      # 3️⃣ Install dependencies
+      - name: Flutter pub get
         run: flutter pub get
 
+      # 4️⃣ Import iOS certificate & provisioning profile
+      - name: Import signing certificate & provisioning profile
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERTIFICATE }}
+          p12-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+          provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
+
+      # 5️⃣ Verify provisioning profile installed (DEBUG – keep this)
+      - name: Verify provisioning profile
+        run: |
+          echo "Installed provisioning profiles:"
+          ls ~/Library/MobileDevice/Provisioning\ Profiles
+
+      # 6️⃣ Build IPA (App Store)
       - name: Build IPA
-        run: flutter build ipa --release --export-method app-store
+        run: |
+          flutter build ipa \
+            --release \
+            --export-method app-store
 
-      - name: List IPA files
-        run: ls -R build/ios/ipa
+      # 7️⃣ Verify IPA exists (IMPORTANT)
+      - name: Verify IPA file
+        run: |
+          ls build/ios/ipa
 
-      - name: Upload IPA to TestFlight
+      # 8️⃣ Upload to TestFlight
+      - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v1
         with:
-          app-path: build/ios/ipa/Runner.ipa
-          issuer-id: ${{ secrets.APP_STORE_ISSUER_ID }}
-          api-key-id: ${{ secrets.APP_STORE_KEY_ID }}
-          api-private-key: ${{ secrets.APP_STORE_PRIVATE_KEY }}
+          app-path: build/ios/ipa/*.ipa
+          api-key-id: ${{ secrets.APP_STORE_API_KEY_ID }}
+          api-issuer-id: ${{ secrets.APP_STORE_API_ISSUER_ID }}
+          api-private-key: ${{ secrets.APP_STORE_API_PRIVATE_KEY }}
