@@ -37,12 +37,6 @@ jobs:
           p12-file-base64: ${{ secrets.IOS_CERTIFICATE }}
           p12-password: ${{ secrets.KEYCHAIN_PASSWORD }}
 
-      # 6️⃣ Import provisioning profile
-      - name: Import provisioning profile
-        uses: apple-actions/import-provisioning-profile@v1
-        with:
-          provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
-
       # 7️⃣ Make signing keychain default
       - name: Make signing keychain default
         run: |
