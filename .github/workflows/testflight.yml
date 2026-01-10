@@ -75,10 +75,17 @@ jobs:
 
       - name: Install provisioning profile
         shell: bash
+        env:
+          IOS_PROVISION_PROFILE: ${{ secrets.IOS_PROVISION_PROFILE }}
         run: |
-          echo "🔍 Secret length: ${{secrets.IOS_PROVISION_PROFILE}}"
+          if [ -z "$IOS_PROVISION_PROFILE" ]; then
+            echo "❌ IOS_PROVISION_PROFILE is empty in shell"
+            exit 1
+          fi
       
-          printf "%s" "${{secrets.IOS_PROVISION_PROFILE}}" | base64 --decode > profile.mobileprovision
+          echo "🔍 Provisioning profile secret length: ${#IOS_PROVISION_PROFILE}"
+      
+          printf "%s" "$IOS_PROVISION_PROFILE" | base64 --decode > profile.mobileprovision
       
           file profile.mobileprovision
       
@@ -91,7 +98,6 @@ jobs:
             "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
       
           echo "✅ Installed provisioning profile: $UUID"
-
 
       # Create IPA folder (ensures directory exists)
       - name: Build iOS archive
