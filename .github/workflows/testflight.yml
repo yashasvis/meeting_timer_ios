@@ -76,12 +76,22 @@ jobs:
       - name: Install provisioning profile
         shell: bash
         run: |
-          if [ -z "${{ secrets.IOS_PROVISION_PROFILE }}" ]; then
-            echo "❌ IOS_PROVISION_PROFILE secret is empty"
-            exit 1
-          fi
+          echo "🔍 Secret length: ${#IOS_PROVISION_PROFILE}"
+      
+          printf "%s" "$IOS_PROVISION_PROFILE" | base64 --decode > profile.mobileprovision
+      
+          file profile.mobileprovision
+      
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+      
+          UUID=$(security cms -D -i profile.mobileprovision | \
+            /usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin)
+      
+          cp profile.mobileprovision \
+            "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
+      
+          echo "✅ Installed provisioning profile: $UUID"
 
-          echo ${{ secrets.IOS_PROVISION_PROFILE }}
 
       # Create IPA folder (ensures directory exists)
       - name: Build iOS archive
