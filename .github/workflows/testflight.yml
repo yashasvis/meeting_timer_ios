@@ -76,9 +76,9 @@ jobs:
       - name: Install provisioning profile
         shell: bash
         run: |
-          echo "🔍 Secret length: ${#IOS_PROVISION_PROFILE}"
+          echo "🔍 Secret length: ${{IOS_PROVISION_PROFILE}}"
       
-          printf "%s" "$IOS_PROVISION_PROFILE" | base64 --decode > profile.mobileprovision
+          printf "%s" "${{IOS_PROVISION_PROFILE}}" | base64 --decode > profile.mobileprovision
       
           file profile.mobileprovision
       
