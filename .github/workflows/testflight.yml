@@ -73,32 +73,11 @@ jobs:
         run: |
           security find-identity -v -p codesigning
 
-      - name: Install provisioning profile
-        shell: bash
-        env:
-          IOS_PROVISION_PROFILE: ${{ secrets.IOS_PROVISION_PROFILE }}
-        run: |
-          if [ -z "$IOS_PROVISION_PROFILE" ]; then
-            echo "❌ IOS_PROVISION_PROFILE is empty in shell"
-            exit 1
-          fi
+      - name: Import provisioning profile
+        uses: apple-actions/import-provisioning-profile@v1
+        with:
+          provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
       
-          echo "🔍 Provisioning profile secret length: ${#IOS_PROVISION_PROFILE}"
-      
-          printf "%s" "$IOS_PROVISION_PROFILE" | base64 --decode > profile.mobileprovision
-      
-          file profile.mobileprovision
-      
-          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-      
-          UUID=$(security cms -D -i profile.mobileprovision | \
-            /usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin)
-      
-          cp profile.mobileprovision \
-            "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
-      
-          echo "✅ Installed provisioning profile: $UUID"
-
       # Create IPA folder (ensures directory exists)
       - name: Build iOS archive
         run: |
@@ -109,6 +88,17 @@ jobs:
             ls -la "$ARCHIVE_PATH"
           else
             echo "❌ Archive NOT found!"
+            exit 1
+          fi
+          
+      - name: Build iOS IPA
+        run: |
+          flutter build ipa --release
+          IPA_PATH="build/ios/ipa/Runner.ipa"
+          if [ -f "$IPA_PATH" ]; then
+            echo "✅ IPA created at $IPA_PATH"
+          else
+            echo "❌ IPA NOT found!"
             exit 1
           fi
 
