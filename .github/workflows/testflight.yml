@@ -70,30 +70,46 @@ jobs:
             exit 1
           fi
 
-          IPA_PATH="build/ios/ipa/Runner.ipa"
-          if [ -f "$IPA_PATH" ]; then
-            echo "✅ IPA created at $IPA_PATH"
-          else
-            echo "❌ IPA NOT found!"
-            exit 1
-          fi
-
-     # 7️⃣ Build archive (no codesign)
-      - name: Build iOS IPA
+      - name: Debug Bundle ID and Provisioning Profile
+        shell: bash
         run: |
-          flutter build ipa --release 
+          echo "=============================="
+          echo "📦 Bundle ID used in archive"
+          echo "=============================="
       
-          # Check if IPA was created
-          IPA_PATH="build/ios/ipa/Runner.ipa"
-          
-          if [ -f "$IPA_PATH" ]; then
-            echo "✅ IPA successfully created at $IPA_PATH"
-            ls -la build/ios/ipa
-          else
-            echo "❌ IPA NOT found! Build may have failed."
-            ls -la build/ios/ipa
+          /usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleIdentifier" \
+            build/ios/archive/Runner.xcarchive/Info.plist || echo "❌ Archive not found"
+      
+          echo ""
+          echo "=============================="
+          echo "📄 Provisioning profile details"
+          echo "=============================="
+      
+          PROFILE_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/Meeting_Timer_App_Store.mobileprovision"
+      
+          if [ ! -f "$PROFILE_PATH" ]; then
+            echo "❌ Provisioning profile not found at:"
+            echo "$PROFILE_PATH"
             exit 1
           fi
+      
+          security cms -D -i "$PROFILE_PATH" > profile.plist
+      
+          echo ""
+          echo "🔑 application-identifier (TeamID.BundleID)"
+          /usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" profile.plist
+      
+          echo ""
+          echo "🚀 Distribution type checks"
+          echo -n "get-task-allow: "
+          /usr/libexec/PlistBuddy -c "Print :Entitlements:get-task-allow" profile.plist
+      
+          echo ""
+          echo -n "ProvisionedDevices: "
+          /usr/libexec/PlistBuddy -c "Print :ProvisionedDevices" profile.plist || echo "None (expected for App Store)"
+      
+          echo ""
+          echo "=============================="
 
       - name: Debug build folder
         run: |
