@@ -59,10 +59,7 @@ jobs:
       # 6️⃣ Build IPA (App Store)
       - name: Build IPA
         run: |
-          flutter build ipa \
-            --release \
-            --export-method app-store \
-            --export-options-plist=ios/exportOptions.plist
+          flutter build ipa --release --export-method app-store
             
       - name: Verify IPA
         run: |
