@@ -55,18 +55,25 @@ jobs:
           echo "IPA folder created at build/ios/ipa"
           ls -la build/ios
 
-      # 7️⃣ Build IPA (App Store)
-      - name: Build IPA archive
-        run: |
-          flutter build ipa --release 
-          echo "Archive built at build/ios/archive/Runner.xcarchive"
-          ls -la build/ios/archive
+     # 7️⃣ Build archive (no codesign)
+      - name: Build IPA for TestFlight
+        run: flutter build ipa --release --no-codesign
 
-      # 9️⃣ Upload to TestFlight
+      - name: Debug build folder
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Listing root folder:"
+          ls -la
+          echo "Listing build folder:"
+          ls -la build
+          echo "Listing iOS archive folder:"
+          ls -la build/ios/archive
+      
+      # 8️⃣ Upload to TestFlight using the archive
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v1
         with:
-          app-path: build/ios/ipa/Runner.ipa   # Adjust if your IPA has a different name
+          app-path: build/ios/archive/Runner.xcarchive
           api-key-id: ${{ secrets.APP_STORE_API_KEY_ID }}
           api-issuer-id: ${{ secrets.APP_STORE_API_ISSUER_ID }}
           api-private-key: ${{ secrets.APP_STORE_API_PRIVATE_KEY }}
