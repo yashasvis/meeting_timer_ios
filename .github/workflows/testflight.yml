@@ -72,17 +72,49 @@ jobs:
       
           security list-keychains -s build.keychain
 
-      - name: Install provisioning profile
+      - name: Make signing keychain default
         run: |
-          echo "$IOS_PROVISION_PROFILE" | base64 --decode > profile.mobileprovision
-          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          cp profile.mobileprovision \
-            "$HOME/Library/MobileDevice/Provisioning Profiles/"
-
+          security list-keychains -d user -s \
+            "$HOME/Library/Keychains/signing_temp.keychain-db" \
+            "$HOME/Library/Keychains/login.keychain-db"
+      
+          security default-keychain -s \
+            "$HOME/Library/Keychains/signing_temp.keychain-db"
+      
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" \
+            "$HOME/Library/Keychains/signing_temp.keychain-db"
 
       - name: Verify signing identity
         run: |
           security find-identity -v -p codesigning
+
+      - name: Install provisioning profile
+        shell: bash
+        run: |
+          if [ -z "$IOS_PROVISION_PROFILE" ]; then
+            echo "❌ IOS_PROVISION_PROFILE secret is empty"
+            exit 1
+          fi
+      
+          echo "$IOS_PROVISION_PROFILE" | base64 --decode > profile.mobileprovision || {
+            echo "❌ Failed to decode provisioning profile"
+            exit 1
+          }
+      
+          echo "📄 Decoded provisioning profile:"
+          file profile.mobileprovision
+      
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+      
+          UUID=$(security cms -D -i profile.mobileprovision | \
+            /usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin)
+      
+          cp profile.mobileprovision \
+            "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
+      
+          echo "✅ Installed provisioning profile:"
+          echo "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
+
 
       # Create IPA folder (ensures directory exists)
       - name: Build iOS archive
