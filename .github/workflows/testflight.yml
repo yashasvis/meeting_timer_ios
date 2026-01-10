@@ -72,11 +72,6 @@ jobs:
       - name: Verify signing identity
         run: |
           security find-identity -v -p codesigning
-
-      - name: Import provisioning profile
-        uses: apple-actions/import-provisioning-profile@v3
-        with:
-          provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
       
       # Create IPA folder (ensures directory exists)
       - name: Build iOS archive
