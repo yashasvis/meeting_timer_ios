@@ -73,6 +73,14 @@ jobs:
         run: |
           security find-identity -v -p codesigning
 
+      - name: Sanity check secrets
+        run: |
+          if [ -z "${{ secrets.IOS_PROVISION_PROFILE }}" ]; then
+            echo "❌ IOS_PROVISION_PROFILE secret missing"
+            exit 1
+          fi
+          echo "✅ IOS_PROVISION_PROFILE secret present"
+
       - name: Install provisioning profile
         shell: bash
         run: |
