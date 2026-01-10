@@ -42,12 +42,6 @@ jobs:
           p12-password: ${{ secrets.KEYCHAIN_PASSWORD }}
           provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
 
-      # 5️⃣ Verify provisioning profile installed (DEBUG – keep this)
-      - name: Verify provisioning profile
-        run: |
-          echo "Installed provisioning profiles:"
-          ls ~/Library/MobileDevice/Provisioning\ Profiles
-
       # 6️⃣ Build IPA (App Store)
       - name: Build IPA
         run: |
