@@ -18,7 +18,7 @@
     <string>$(PRODUCT_NAME)</string>
 
     <key>CFBundleDisplayName</key>
-    <string>Meeting Timer</string>
+    <string>Meeting Reminder Timer</string>
 
     <key>CFBundlePackageType</key>
     <string>APPL</string>
