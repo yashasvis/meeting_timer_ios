@@ -15,40 +15,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Configure access to private GitHub fork
+      # 2️⃣ Configure access to private GitHub packages
       - name: Configure Git for private packages
         run: |
           git config --global url."https://${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}:@github.com/".insteadOf "https://github.com/"
 
-      # Step 3: Setup Flutter
+      # 3️⃣ Set up Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.38.6"
 
-      # Step 4: Install Flutter dependencies
+      # 4️⃣ Install Flutter dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      # 3️⃣ Install dependencies
-      - name: Flutter pub get
-        run: flutter pub get
-
-      #4 Print ios certificate
-      - name: Print IOS certificate
-        run: echo ${{ secrets.IOS_CERTIFICATE }}
-
+      # 5️⃣ Install provisioning profile
       - name: Install provisioning profile
         run: |
-            mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-            cp ios/profiles/Meeting_Timer_App_Store.mobileprovision \
-             ~/Library/MobileDevice/Provisioning\ Profiles/
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp ios/profiles/Meeting_Timer_App_Store.mobileprovision \
+            ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Verify provisioning profile installed
-        run: |
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles
+        run: ls -la ~/Library/MobileDevice/Provisioning\ Profiles
 
-      # Import iOS certificate & provisioning profile
+      # 6️⃣ Import iOS signing certificate & provisioning profile
       - name: Import signing certificate & provisioning profile
         uses: apple-actions/import-codesign-certs@v3
         with:
@@ -56,25 +48,23 @@ jobs:
           p12-password: ${{ secrets.KEYCHAIN_PASSWORD }}
           provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
 
-      # 6️⃣ Build IPA (App Store)
+      # 7️⃣ Build IPA (App Store)
       - name: Build IPA
         run: |
           flutter build ipa --release --export-method app-store
-            
-      - name: Verify IPA
-        run: |
-          find build -name "*.ipa"
+          echo "IPA files generated:"
+          find build/ios -name "*.ipa"
 
-      # 7️⃣ Verify IPA exists (IMPORTANT)
+      # 8️⃣ Verify IPA exists
       - name: Verify IPA file
         run: |
-          ls build/ios/ipa
+          ls -la build/ios/ipa
 
-      # 8️⃣ Upload to TestFlight
+      # 9️⃣ Upload to TestFlight
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v1
         with:
-          app-path: build/ios/ipa/*.ipa
+          app-path: build/ios/ipa/Runner.ipa   # Adjust if your IPA has a different name
           api-key-id: ${{ secrets.APP_STORE_API_KEY_ID }}
           api-issuer-id: ${{ secrets.APP_STORE_API_ISSUER_ID }}
           api-private-key: ${{ secrets.APP_STORE_API_PRIVATE_KEY }}
