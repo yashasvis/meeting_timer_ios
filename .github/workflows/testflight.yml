@@ -49,15 +49,41 @@ jobs:
           provisioning-profile-base64: ${{ secrets.IOS_PROVISION_PROFILE }}
 
       # 7️⃣ Build IPA (App Store)
-      - name: Build IPA
+      - name: Build IPA archive
         run: |
-          flutter build ipa --release --export-method app-store
-          echo "IPA files generated:"
-          find build/ios -name "*.ipa"
-
-      # 8️⃣ Verify IPA exists
-      - name: Verify IPA file
+          flutter build ipa --release --no-codesign
+          echo "Archive built at build/ios/archive/Runner.xcarchive"
+          ls -la build/ios/archive
+      
+      - name: Export IPA for TestFlight
         run: |
+          # Create ExportOptions.plist for App Store
+          cat > ExportOptions.plist <<EOL
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" 
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>uploadBitcode</key>
+              <true/>
+              <key>compileBitcode</key>
+              <true/>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>teamID</key>
+              <string>WFF4J28VPZ</string> <!-- Your team ID -->
+          </dict>
+          </plist>
+          EOL
+      
+          xcodebuild -exportArchive \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build/ios/ipa
+      
+          echo "IPA exported:"
           ls -la build/ios/ipa
 
       # 9️⃣ Upload to TestFlight
