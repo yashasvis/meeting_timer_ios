@@ -156,24 +156,6 @@ jobs:
           echo "Searching for IPA files..."
           find build -type f -name "*.ipa" -print
 
-      - name: Decode API key test
-        run: |
-          echo "$API_KEY" | base64 --decode > /tmp/key.p8
-          echo "Decoded key preview:"
-          head -n 2 /tmp/key.p8
-        env:
-          API_KEY: ${{ secrets.APP_STORE_PRIVATE_KEY }}
-
-      - name: Decode App Store Connect API Key
-        run: |
-          mkdir -p $HOME/private_keys
-          echo "${{ secrets.APP_STORE_PRIVATE_KEY }}" | base64 --decode > $HOME/private_keys/AuthKey_9597.p8
-
-      - name: Verify key file
-        run: |
-          ls -la $HOME/private_keys
-          head -n 5 $HOME/private_keys/AuthKey_9597.p8
-
       # 8️⃣ Upload to TestFlight using the archive
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v1
@@ -181,4 +163,4 @@ jobs:
           app-path: build/ios/ipa/ios_calendar_demo.ipa
           api-key-id: ${{ secrets.APP_STORE_KEY_ID }}
           issuer-id: ${{ secrets.APP_STORE_ISSUER_ID }}
-          api-private-key: $HOME/private_keysAuthKey_9597.p8
+          api-private-key: ${{ secrets.APP_STORE_PRIVATE_KEY }}
