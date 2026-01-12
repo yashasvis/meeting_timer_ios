@@ -165,7 +165,7 @@ class _LoginPage extends State<LoginPage> {
                 }
               },
               icon: const Icon(Icons.dashboard_rounded),
-              label: const Text("Sing In with Microsoft"),
+              label: const Text("Sign In with Microsoft"),
             ),
           )
         ],
