@@ -150,6 +150,12 @@ jobs:
           flutter pub get
           flutter build ipa \
             --export-options-plist=ios/ExportOptions.plist
+
+      - name: Locate IPA file
+        run: |
+          echo "Searching for IPA files..."
+          find build -type f -name "*.ipa" -print
+
       
       # 8️⃣ Upload to TestFlight using the archive
       - name: Upload to TestFlight
