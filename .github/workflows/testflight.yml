@@ -141,8 +141,8 @@ jobs:
           echo "API KEY ID length: ${#APP_STORE_API_KEY_ID}"
           echo "ISSUER ID length: ${#APP_STORE_API_ISSUER_ID}"
         env:
-          APP_STORE_API_KEY_ID: ${{ secrets.APP_STORE_API_KEY_ID }}
-          APP_STORE_API_ISSUER_ID: ${{ secrets.APP_STORE_API_ISSUER_ID }}
+          APP_STORE_API_KEY_ID: ${{ secrets.APP_STORE_KEY_ID }}
+          APP_STORE_API_ISSUER_ID: ${{ secrets.APP_STORE_ISSUER_ID }}
       
       # 8️⃣ Upload to TestFlight using the archive
       - name: Upload to TestFlight
