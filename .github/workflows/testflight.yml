@@ -136,6 +136,13 @@ jobs:
           ls -la build
           echo "Listing iOS archive folder:"
           ls -la build/ios/archive
+      - name: Debug API secrets
+        run: |
+          echo "API KEY ID length: ${#APP_STORE_API_KEY_ID}"
+          echo "ISSUER ID length: ${#APP_STORE_API_ISSUER_ID}"
+        env:
+          APP_STORE_API_KEY_ID: ${{ secrets.APP_STORE_API_KEY_ID }}
+          APP_STORE_API_ISSUER_ID: ${{ secrets.APP_STORE_API_ISSUER_ID }}
       
       # 8️⃣ Upload to TestFlight using the archive
       - name: Upload to TestFlight
