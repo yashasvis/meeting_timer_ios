@@ -169,6 +169,6 @@ jobs:
         uses: apple-actions/upload-testflight-build@v1
         with:
           app-path: build/ios/ipa/ios_calendar_demo.ipa
-          api-key-id: ${{ secrets.APP_STORE_API_KEY_ID }}
-          issuer-id: ${{ secrets.APP_STORE_API_ISSUER_ID }}
-          api-private-key-base64: ${{ secrets.APP_STORE_API_PRIVATE_KEY }}
+          api-key-id: ${{ secrets.APP_STORE_KEY_ID }}
+          issuer-id: ${{ secrets.APP_STORE_ISSUER_ID }}
+          api-private-key: ${{ secrets.APP_STORE_PRIVATE_KEY }}
