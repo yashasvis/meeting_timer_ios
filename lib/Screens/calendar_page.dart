@@ -26,16 +26,16 @@ import '../Model/app_theme.dart';
 import 'no_internet_connection_page.dart';
 import 'countdown_page.dart';
 
-class CalendarPage extends StatefulWidget{
+class CalendarPage extends StatefulWidget {
   final String? accessToken;
   final dynamic navigatorKey;
-  const CalendarPage(this.accessToken,this.navigatorKey, {super.key});
+  const CalendarPage(this.accessToken, this.navigatorKey, {super.key});
 
   @override
   State<CalendarPage> createState() => _CalendarPage();
 }
 
-class _CalendarPage extends State<CalendarPage>{
+class _CalendarPage extends State<CalendarPage> {
   ConnectivityResult _connectionStatus = ConnectivityResult.none;
   final Connectivity _connectivity = Connectivity();
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
@@ -50,18 +50,18 @@ class _CalendarPage extends State<CalendarPage>{
 
   final Map<String, Color> categoryColors = {
     "default": Colors.blue,
-    "Purple category" : Colors.purple,
-    "Blue category" : Colors.blue,
-    "Green category" : Colors.green,
-    "Orange category" : Colors.orange,
+    "Purple category": Colors.purple,
+    "Blue category": Colors.blue,
+    "Green category": Colors.green,
+    "Orange category": Colors.orange,
     "Red category": Colors.red.shade300,
-    "Yellow category" : Colors.yellow.shade700
+    "Yellow category": Colors.yellow.shade700
   };
 
   List<Event> getEvents = [];
 
   @override
-  void initState(){
+  void initState() {
     _getCalendarEvents();
     showTimer();
     if (Platform.isAndroid) {
@@ -102,73 +102,102 @@ class _CalendarPage extends State<CalendarPage>{
     });
   }
 
-  void showTimer() async{
-    Timer.periodic(const Duration(seconds: 2),(timer) async {
+  void showTimer() async {
+    Timer.periodic(const Duration(seconds: 2), (timer) async {
       SharedPreferences preferences = await SharedPreferences.getInstance();
       preferences.reload();
-      var isMeetingRunningOver = preferences.getBool('isMeetingRunningOver') ?? false;
+      var isMeetingRunningOver =
+          preferences.getBool('isMeetingRunningOver') ?? false;
       var isTimerShown = preferences.getBool('isTimerShown') ?? false;
-      if(!isMeetingRunningOver || !preferences.containsKey('isTimerShown') || isTimerShown){
+      if (!isMeetingRunningOver ||
+          !preferences.containsKey('isTimerShown') ||
+          isTimerShown) {
         ValueNotifier<Duration?> countdownNotifier = ValueNotifier(null);
         var endDates = "";
-        if(preferences.containsKey('currentMeetingTitle')){
+        if (preferences.containsKey('currentMeetingTitle')) {
           endDates = preferences.getString('currentEndDate') ?? '';
-        }
-        else{
+        } else {
           endDates = preferences.getString('eventEndDate') ?? '';
         }
-        if(endDates != ""){
-          if(DateTime.now().isBefore(DateTime.parse(endDates))){
-            if(preferences.containsKey('HasScheduleWorkStarted')){
-              bool hasScheduleWorkStarted = preferences.getBool('HasScheduleWorkStarted') ?? false;
-              if(hasScheduleWorkStarted){
+        if (endDates != "") {
+          if (DateTime.now().isBefore(DateTime.parse(endDates))) {
+            if (preferences.containsKey('HasScheduleWorkStarted')) {
+              bool hasScheduleWorkStarted =
+                  preferences.getBool('HasScheduleWorkStarted') ?? false;
+              if (hasScheduleWorkStarted) {
                 timer.cancel();
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => CountdownWidget(countdownNotifier,widget.navigatorKey)),
-                );
+                preferences.reload();
+                if (!preferences.containsKey('alreadyRedirected')) {
+                  preferences.setBool('alreadyRedirected', true);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => CountdownWidget(
+                            countdownNotifier, widget.navigatorKey)),
+                  );
+                }
               }
             }
-            if(preferences.containsKey('eventStartDate')){
-              var eventStartDate = preferences.getString('eventStartDate') ?? '';
-              if(eventStartDate != ""){
+            if (preferences.containsKey('eventStartDate')) {
+              var eventStartDate =
+                  preferences.getString('eventStartDate') ?? '';
+              if (eventStartDate != "") {
                 timer.cancel();
                 var eventStartDateTime = DateTime.parse(eventStartDate);
                 if (!DateTime.now().isAfter(eventStartDateTime)) {
                   DateTime eventStart = eventStartDateTime.toLocal();
                   setState(() {
-                    countdownNotifier.value = eventStart.difference(DateTime.now());
+                    countdownNotifier.value =
+                        eventStart.difference(DateTime.now());
                   });
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => CountdownWidget(countdownNotifier,widget.navigatorKey)),
-                  );
+                  preferences.reload();
+                  if (!preferences.containsKey('alreadyRedirected')) {
+                    preferences.setBool('alreadyRedirected', true);
+                    preferences.setBool('currentHasScheduleWorkStarted', true);
+                    // Navigator.of(context).push(
+                    //   MaterialPageRoute(builder: (_) => CountdownWidget(countdownNotifier,widget.navigatorKey)),
+                    // );
+                  }
                 }
               }
             }
           }
-        }
-        else{
-          if(preferences.containsKey('HasScheduleWorkStarted')){
-            bool hasScheduleWorkStarted = preferences.getBool('HasScheduleWorkStarted') ?? false;
-            if(hasScheduleWorkStarted){
+        } else {
+          if (preferences.containsKey('HasScheduleWorkStarted')) {
+            bool hasScheduleWorkStarted =
+                preferences.getBool('HasScheduleWorkStarted') ?? false;
+            if (hasScheduleWorkStarted) {
               timer.cancel();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => CountdownWidget(countdownNotifier,widget.navigatorKey)),
-              );
+              preferences.reload();
+              if (!preferences.containsKey('alreadyRedirected')) {
+                preferences.setBool('alreadyRedirected', true);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => CountdownWidget(
+                          countdownNotifier, widget.navigatorKey)),
+                );
+              }
             }
           }
-          if(preferences.containsKey('eventStartDate')){
+          if (preferences.containsKey('eventStartDate')) {
             var eventStartDate = preferences.getString('eventStartDate') ?? '';
-            if(eventStartDate != ""){
+            if (eventStartDate != "") {
               timer.cancel();
               var eventStartDateTime = DateTime.parse(eventStartDate);
               if (!DateTime.now().isAfter(eventStartDateTime)) {
                 DateTime eventStart = eventStartDateTime.toLocal();
                 setState(() {
-                  countdownNotifier.value = eventStart.difference(DateTime.now());
+                  countdownNotifier.value =
+                      eventStart.difference(DateTime.now());
                 });
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => CountdownWidget(countdownNotifier,widget.navigatorKey)),
-                );
+                preferences.reload();
+                if (!preferences.containsKey('alreadyRedirected')) {
+                  preferences.setBool('alreadyRedirected', true);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => CountdownWidget(
+                            countdownNotifier, widget.navigatorKey)),
+                  );
+                }
               }
             }
           }
@@ -177,15 +206,17 @@ class _CalendarPage extends State<CalendarPage>{
     });
   }
 
-  Future<String?> getValidTokenKey() async{
+  Future<String?> getValidTokenKey() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     preferences.setInt('isLoggedIn', 1);
-    preferences.setString('LoggedDate', DateFormat('yyyy-MM-dd').format(DateTime.now()));
+    preferences.setString(
+        'LoggedDate', DateFormat('yyyy-MM-dd').format(DateTime.now()));
 
     final Config config = Config(
       tenant: "common",
       clientId: "fd5ccd50-5603-4e29-b149-2bedc44a3a89",
-      scope: "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
+      scope:
+          "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
       navigatorKey: widget.navigatorKey,
       redirectUri: ThemeModel.baseUrl,
       prompt: "consent",
@@ -201,13 +232,14 @@ class _CalendarPage extends State<CalendarPage>{
     }
   }
 
-  void _getCalendarEvents() async{
+  void _getCalendarEvents() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String loggedDate = preferences.getString('LoggedDate') ?? '';
 
-    if(loggedDate != ""){
-      DateTime dateTime = DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
-      if(dateTime.isAfter(DateTime.parse(loggedDate))){
+    if (loggedDate != "") {
+      DateTime dateTime =
+          DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
+      if (dateTime.isAfter(DateTime.parse(loggedDate))) {
         preferences.remove('LoggedDate');
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => LoginPage(widget.navigatorKey)),
@@ -218,14 +250,14 @@ class _CalendarPage extends State<CalendarPage>{
     final accessToken = await getValidTokenKey();
     final dio = Dio();
     try {
-      startDate = DateTime(startDate.year,startDate.month,startDate.day);
-      endDate = DateTime(endDate.year,endDate.month,endDate.day).add(const Duration(days: 1));
+      startDate = DateTime(startDate.year, startDate.month, startDate.day);
+      endDate = DateTime(endDate.year, endDate.month, endDate.day)
+          .add(const Duration(days: 1));
 
-      setState(() {
+      setState(() {});
 
-      });
-
-      final response = await dio.get("https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=${startDate.toIso8601String()}Z&endDateTime=${endDate.toIso8601String()}Z&top=500",
+      final response = await dio.get(
+        "https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=${startDate.toIso8601String()}Z&endDateTime=${endDate.toIso8601String()}Z&top=500",
         options: Options(headers: {
           "Authorization": "Bearer $accessToken",
         }),
@@ -241,17 +273,19 @@ class _CalendarPage extends State<CalendarPage>{
             .toList();
       });
 
-      if(events.isNotEmpty){
+      if (events.isNotEmpty) {
         setState(() {
           getEvents = [];
         });
         for (var e in events) {
-          final color = e.categories.isNotEmpty ? categoryColors[e.categories.first] : categoryColors['default']!;
+          final color = e.categories.isNotEmpty
+              ? categoryColors[e.categories.first]
+              : categoryColors['default']!;
           var location = "";
           var content = e.body['content'];
           var hasContent = true;
           bool isMeetingJoining = false;
-          if(content.toString().contains("Join online meeting")){
+          if (content.toString().contains("Join online meeting")) {
             dom.Document document = html.parse(content.toString());
             document.body!.querySelectorAll("*").forEach((element) {
               if (element.text.contains("Join online meeting")) {
@@ -265,154 +299,154 @@ class _CalendarPage extends State<CalendarPage>{
 
             content = document.body!.innerHtml;
           }
-          if(e.location.isNotEmpty){
-            var locations = e.location.containsKey('displayName') ? true : false;
+          if (e.location.isNotEmpty) {
+            var locations =
+                e.location.containsKey('displayName') ? true : false;
             var meeting = locations ? e.location['displayName'] : "";
             location = meeting;
           }
-          RegExp brOnlyRegex = RegExp(r'^[ \n\r]*(<br\s*\/?>[ \n\r]*)*$', caseSensitive: true);
-          if(brOnlyRegex.hasMatch(content) && content != ""){
+          RegExp brOnlyRegex =
+              RegExp(r'^[ \n\r]*(<br\s*\/?>[ \n\r]*)*$', caseSensitive: true);
+          if (brOnlyRegex.hasMatch(content) && content != "") {
             hasContent = false;
           }
           getEvents.add(Event(
-            DateTime.parse(e.start['dateTime']+"Z").toLocal(),
-            e.subject,
-            color!,
-            end: DateTime.parse(e.end['dateTime']+"Z").toLocal(),
-            type: e.type,
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  Size screenSize = MediaQuery.of(context).size;
-                  return Dialog(
-                    insetPadding: const EdgeInsets.all(16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      width: double.infinity,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: screenSize.width * 0.70,
-                              child: Text(
-                                e.subject,
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  overflow: TextOverflow.clip,
-                                ),
+              DateTime.parse(e.start['dateTime'] + "Z").toLocal(),
+              e.subject,
+              color!,
+              end: DateTime.parse(e.end['dateTime'] + "Z").toLocal(),
+              type: e.type, onTap: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                Size screenSize = MediaQuery.of(context).size;
+                return Dialog(
+                  insetPadding: const EdgeInsets.all(16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    width: double.infinity,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: screenSize.width * 0.70,
+                            child: Text(
+                              e.subject,
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
                                 overflow: TextOverflow.clip,
                               ),
+                              overflow: TextOverflow.clip,
                             ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                const Icon(Icons.access_time, size: 20,color: Colors.blue),
-                                const SizedBox(width: 8),
-                                SizedBox(
-                                  width: screenSize.width * 0.70,
-                                  child: Text(
-                                    "${DateFormat('dd/MMM/yyyy hh:mm a').format(DateTime.parse(e.start['dateTime']+"Z").toLocal())} - ${DateFormat('hh:mm a').format(DateTime.parse(e.end['dateTime']+"Z").toLocal())}",
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              const Icon(Icons.access_time,
+                                  size: 20, color: Colors.blue),
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                width: screenSize.width * 0.70,
+                                child: Text(
+                                    "${DateFormat('dd/MMM/yyyy hh:mm a').format(DateTime.parse(e.start['dateTime'] + "Z").toLocal())} - ${DateFormat('hh:mm a').format(DateTime.parse(e.end['dateTime'] + "Z").toLocal())}",
                                     style: const TextStyle(
-                                      fontSize: 15,
-                                      overflow: TextOverflow.clip
-                                    ),
-                                    overflow: TextOverflow.clip
-                                  ),
-                                )
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            if (location != "")
-                              Row(
-                                children: [
-                                  const Icon(Icons.location_on, size: 20,color: Colors.blue),
-                                  const SizedBox(width: 8),
-                                  Flexible(
-                                    child: Text(
-                                      location,
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            const SizedBox(height: 12),
-                            if (e.bodyPreview.isNotEmpty)
-                              hasContent == true ? Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  const Icon(Icons.dehaze_outlined, size: 20,color: Colors.blue),
-                                  Flexible(
-                                    child: Html(data: content)
-                                  ),
-                                ],
-                              ) : const Padding(padding: EdgeInsets.zero),
-                            const SizedBox(height: 12),
-                            if(isMeetingJoining)
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  const Icon(Icons.video_camera_front_outlined, size: 20,color: Colors.blue,),
-                                  Flexible(
-                                      child: TextButton(
-                                        onPressed: () async{
-                                          await launchUrl(
-                                            Uri.parse(e.onlineMeeting!['joinUrl']),
-                                            mode: LaunchMode.externalApplication,
-                                          );
-                                        },
-                                        child: const Text(
-                                          "Join Teams Meeting",
-                                          style: TextStyle(
-                                            fontSize: 16
-                                          ),
-                                        ),
-                                      )
-                                  ),
-                                ],
-                              ),
-                            const SizedBox(height: 12),
+                                        fontSize: 15,
+                                        overflow: TextOverflow.clip),
+                                    overflow: TextOverflow.clip),
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          if (location != "")
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text("Close"),
+                                const Icon(Icons.location_on,
+                                    size: 20, color: Colors.blue),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    location,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
                                 ),
                               ],
-                            )
-                          ],
-                        ),
+                            ),
+                          const SizedBox(height: 12),
+                          if (e.bodyPreview.isNotEmpty)
+                            hasContent == true
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      const Icon(Icons.dehaze_outlined,
+                                          size: 20, color: Colors.blue),
+                                      Flexible(child: Html(data: content)),
+                                    ],
+                                  )
+                                : const Padding(padding: EdgeInsets.zero),
+                          const SizedBox(height: 12),
+                          if (isMeetingJoining)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.video_camera_front_outlined,
+                                  size: 20,
+                                  color: Colors.blue,
+                                ),
+                                Flexible(
+                                    child: TextButton(
+                                  onPressed: () async {
+                                    await launchUrl(
+                                      Uri.parse(e.onlineMeeting!['joinUrl']),
+                                      mode: LaunchMode.externalApplication,
+                                    );
+                                  },
+                                  child: const Text(
+                                    "Join Teams Meeting",
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                )),
+                              ],
+                            ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text("Close"),
+                              ),
+                            ],
+                          )
+                        ],
                       ),
                     ),
-                  );
-                },
-              );
-            },
-            label: e.showAs,
-            location: '',
-            isAllDay: e.isAllDay,
-            description: location
-          ));
+                  ),
+                );
+              },
+            );
+          },
+              label: e.showAs,
+              location: '',
+              isAllDay: e.isAllDay,
+              description: location));
         }
       }
 
-      setState(() {
-
-      });
+      setState(() {});
 
       setState(() {
         isCalendarLoading = true;
         isLoaded = true;
       });
     } catch (e) {
-      if(kDebugMode){
+      if (kDebugMode) {
         print(e);
       }
     }
@@ -428,13 +462,13 @@ class _CalendarPage extends State<CalendarPage>{
     DateTime start = getStartOfWeek(date, startWeekday: startWeekday);
     return start.add(const Duration(days: 6));
   }
-  
+
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop,result) {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         if (Platform.isAndroid) {
           final service = FlutterBackgroundService();
@@ -444,183 +478,253 @@ class _CalendarPage extends State<CalendarPage>{
           Navigator.of(context).pop();
         }
       },
-      child: _connectionStatus != ConnectivityResult.none ? Scaffold(
-        backgroundColor: Colors.white,
-        body: isLoaded ? Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding:EdgeInsets.zero,
-                child:SizedBox(
-                  height: screenSize.height,
-                  child: VisualsCalendar(
-                    events: getEvents,
-                    key: _calendarKey,
-                    defaultFormat: CalendarFormat.day,
-                    selectionEnabled: false,
-                    onPageChanged: (start, end) {
-                      setState(() {
-                        startDate = start;
-                        endDate = end;
-                      });
-
-                      _getCalendarEvents();  // fetch events for that range
-                    },
-                    appBarBuilder: (
-                        BuildContext context,
-                        String title,
-                        CalendarFormat format,
-                        VoidCallback onLeftArrow,
-                        Function(CalendarFormat) onFormatChanged,
-                        List<CalendarFormat> availableFormats,
-                        ) {
-                      return AppBar(
-                        backgroundColor: Colors.blue.shade300,
-                        automaticallyImplyLeading: false,
-                        title: Text(title,style: const TextStyle(color: Colors.white),),
-                        actions: [
-                          IconButton(
-                            style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero
-                            ),
-                            onPressed: () async{
-                              SharedPreferences preferences = await SharedPreferences.getInstance();
-                              var currentHasScheduleWorkStarted = preferences.getBool('currentHasScheduleWorkStarted') ?? false;
-                              if(currentHasScheduleWorkStarted){
-                                ValueNotifier<Duration?> countdownNotifier = ValueNotifier(null);
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => CountdownWidget(countdownNotifier,widget.navigatorKey)),
-                                );
-                              }
-                              else{
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => super.widget),
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.sync,color: Colors.white),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.calendar_month_outlined,color: Colors.white,),
-                            onPressed: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: startDate,
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2100),
-                              );
-                              if (picked != null) {
-                                format = CalendarFormat.day;
-                                onFormatChanged(format);
-                                if (format == CalendarFormat.day) {
-                                  startDate = focusedDay;
-                                  endDate = focusedDay;
-                                } else if (format == CalendarFormat.week) {
-                                  startDate = getStartOfWeek(focusedDay); // always Monday
-                                  endDate = getEndOfWeek(focusedDay);
-                                } else if (format == CalendarFormat.threeDays) {
-                                  startDate = DateTime.now().add(const Duration(days: -1));
-                                  endDate = DateTime.now().add(const Duration(days: 1));
-                                }
-                                setState(() {
-                                  currentCalendarFormat = format;
-                                });
-
-                                startDate = DateTime(picked.year,picked.month,picked.day);
-                                endDate = DateTime(picked.year,picked.month,picked.day).add(const Duration(days: 1));
-                                if (_calendarKey.currentState is VisualsCalendarState) {
-                                  final calendarState = _calendarKey.currentState as VisualsCalendarState;
-                                  _calendarKey.currentState?.jumpToDate(startDate);
-                                  calendarState.widget.onPageChanged?.call(startDate, endDate);
-                                }
-                                setState(() {
-
-                                });
-                                _getCalendarEvents();
-                              }
-                            },
-                          ),
+      child: _connectionStatus != ConnectivityResult.none
+          ? Scaffold(
+              backgroundColor: Colors.white,
+              body: isLoaded
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                           Padding(
-                              padding: EdgeInsets.zero,
-                              child: TextButton(
-                                  style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: Size.zero
-                                  ),
-                                  onPressed: () async{
-                                    try{
-                                      SharedPreferences preferences = await SharedPreferences.getInstance();
-                                      preferences.remove('isLoggedIn');
+                            padding: EdgeInsets.zero,
+                            child: SizedBox(
+                              height: screenSize.height,
+                              child: VisualsCalendar(
+                                events: getEvents,
+                                key: _calendarKey,
+                                defaultFormat: CalendarFormat.day,
+                                selectionEnabled: false,
+                                onPageChanged: (start, end) {
+                                  setState(() {
+                                    startDate = start;
+                                    endDate = end;
+                                  });
 
-                                      final Config config = Config(
-                                        tenant: "common",
-                                        clientId: "fd5ccd50-5603-4e29-b149-2bedc44a3a89",
-                                        scope: "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
-                                        navigatorKey: widget.navigatorKey,
-                                        redirectUri: ThemeModel.baseUrl,
-                                        loader: const Center(child: CircularProgressIndicator(),),
-                                        postLogoutRedirectUri: ThemeModel.baseUrl,
-                                        customParameters: {
-                                          'prompt': 'login',
-                                          // 'amr_values': 'mfa',
-                                          'login_hint': '',
-                                          'max_age': '0', // Forces fresh authentication
-                                        },
-                                        prompt: "login",
-                                      );
-
-                                      final AadOAuth oauth = AadOAuth(config);
-                                      await oauth.logout();
-                                      await oauth.logout();
-
-                                      SharedPreferences preference = await SharedPreferences.getInstance();
-                                      preference.clear();
-
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(builder: (_) => LoginPage(widget.navigatorKey)),
-                                      );
-                                    }
-                                    catch(e){
-                                      if(kDebugMode){
-                                        print(e);
-                                      }
-                                    }
-                                  },
-                                  child: Center(
-                                    child: Row(
-                                      children: [
-                                        Padding(
-                                          padding: EdgeInsets.only(
-                                            left: screenSize.width * 0.01,
-                                          ),
-                                          child: const Icon(Icons.login,size: 24,color: Colors.white,),
-                                        ),
-                                        Padding(
-                                          padding: EdgeInsets.only(
-                                              left: screenSize.width * 0.02,
-                                              right: screenSize.width * 0.02
-                                          ),
-                                          child: const Text("Logout",style: TextStyle(fontSize: 16,color: Colors.white),),
-                                        )
-                                      ],
+                                  _getCalendarEvents(); // fetch events for that range
+                                },
+                                appBarBuilder: (
+                                  BuildContext context,
+                                  String title,
+                                  CalendarFormat format,
+                                  VoidCallback onLeftArrow,
+                                  Function(CalendarFormat) onFormatChanged,
+                                  List<CalendarFormat> availableFormats,
+                                ) {
+                                  return AppBar(
+                                    backgroundColor: Colors.blue.shade300,
+                                    automaticallyImplyLeading: false,
+                                    title: Text(
+                                      title,
+                                      style:
+                                          const TextStyle(color: Colors.white),
                                     ),
-                                  )
-                              )
-                          )
+                                    actions: [
+                                      IconButton(
+                                        style: TextButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: Size.zero),
+                                        onPressed: () async {
+                                          SharedPreferences preferences =
+                                              await SharedPreferences
+                                                  .getInstance();
+                                          var currentHasScheduleWorkStarted =
+                                              preferences.getBool(
+                                                      'currentHasScheduleWorkStarted') ??
+                                                  false;
+                                          if (currentHasScheduleWorkStarted) {
+                                            ValueNotifier<Duration?>
+                                                countdownNotifier =
+                                                ValueNotifier(null);
+                                            preferences.reload();
+                                            if (!preferences.containsKey(
+                                                'alreadyRedirected')) {
+                                              preferences.setBool(
+                                                  'alreadyRedirected', true);
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        CountdownWidget(
+                                                            countdownNotifier,
+                                                            widget
+                                                                .navigatorKey)),
+                                              );
+                                            }
+                                          } else {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                  builder: (_) => super.widget),
+                                            );
+                                          }
+                                        },
+                                        icon: const Icon(Icons.sync,
+                                            color: Colors.white),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.calendar_month_outlined,
+                                          color: Colors.white,
+                                        ),
+                                        onPressed: () async {
+                                          final picked = await showDatePicker(
+                                            context: context,
+                                            initialDate: startDate,
+                                            firstDate: DateTime(2000),
+                                            lastDate: DateTime(2100),
+                                          );
+                                          if (picked != null) {
+                                            format = CalendarFormat.day;
+                                            onFormatChanged(format);
+                                            if (format == CalendarFormat.day) {
+                                              startDate = focusedDay;
+                                              endDate = focusedDay;
+                                            } else if (format ==
+                                                CalendarFormat.week) {
+                                              startDate = getStartOfWeek(
+                                                  focusedDay); // always Monday
+                                              endDate =
+                                                  getEndOfWeek(focusedDay);
+                                            } else if (format ==
+                                                CalendarFormat.threeDays) {
+                                              startDate = DateTime.now().add(
+                                                  const Duration(days: -1));
+                                              endDate = DateTime.now()
+                                                  .add(const Duration(days: 1));
+                                            }
+                                            setState(() {
+                                              currentCalendarFormat = format;
+                                            });
+
+                                            startDate = DateTime(picked.year,
+                                                picked.month, picked.day);
+                                            endDate = DateTime(picked.year,
+                                                    picked.month, picked.day)
+                                                .add(const Duration(days: 1));
+                                            if (_calendarKey.currentState
+                                                is VisualsCalendarState) {
+                                              final calendarState =
+                                                  _calendarKey.currentState
+                                                      as VisualsCalendarState;
+                                              _calendarKey.currentState
+                                                  ?.jumpToDate(startDate);
+                                              calendarState.widget.onPageChanged
+                                                  ?.call(startDate, endDate);
+                                            }
+                                            setState(() {});
+                                            _getCalendarEvents();
+                                          }
+                                        },
+                                      ),
+                                      Padding(
+                                          padding: EdgeInsets.zero,
+                                          child: TextButton(
+                                              style: TextButton.styleFrom(
+                                                  padding: EdgeInsets.zero,
+                                                  minimumSize: Size.zero),
+                                              onPressed: () async {
+                                                try {
+                                                  SharedPreferences
+                                                      preferences =
+                                                      await SharedPreferences
+                                                          .getInstance();
+                                                  preferences
+                                                      .remove('isLoggedIn');
+
+                                                  final Config config = Config(
+                                                    tenant: "common",
+                                                    clientId:
+                                                        "fd5ccd50-5603-4e29-b149-2bedc44a3a89",
+                                                    scope:
+                                                        "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
+                                                    navigatorKey:
+                                                        widget.navigatorKey,
+                                                    redirectUri:
+                                                        ThemeModel.baseUrl,
+                                                    loader: const Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    ),
+                                                    postLogoutRedirectUri:
+                                                        ThemeModel.baseUrl,
+                                                    customParameters: {
+                                                      'prompt': 'login',
+                                                      // 'amr_values': 'mfa',
+                                                      'login_hint': '',
+                                                      'max_age':
+                                                          '0', // Forces fresh authentication
+                                                    },
+                                                    prompt: "login",
+                                                  );
+
+                                                  final AadOAuth oauth =
+                                                      AadOAuth(config);
+                                                  await oauth.logout();
+                                                  await oauth.logout();
+
+                                                  SharedPreferences preference =
+                                                      await SharedPreferences
+                                                          .getInstance();
+                                                  preference.clear();
+
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                        builder: (_) =>
+                                                            LoginPage(widget
+                                                                .navigatorKey)),
+                                                  );
+                                                } catch (e) {
+                                                  if (kDebugMode) {
+                                                    print(e);
+                                                  }
+                                                }
+                                              },
+                                              child: Center(
+                                                child: Row(
+                                                  children: [
+                                                    Padding(
+                                                      padding: EdgeInsets.only(
+                                                        left: screenSize.width *
+                                                            0.01,
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons.login,
+                                                        size: 24,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding: EdgeInsets.only(
+                                                          left:
+                                                              screenSize.width *
+                                                                  0.02,
+                                                          right:
+                                                              screenSize.width *
+                                                                  0.02),
+                                                      child: const Text(
+                                                        "Logout",
+                                                        style: TextStyle(
+                                                            fontSize: 16,
+                                                            color:
+                                                                Colors.white),
+                                                      ),
+                                                    )
+                                                  ],
+                                                ),
+                                              )))
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
                         ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ) : const Center(
-          child: CircularProgressIndicator(),
-        ),
-      ) : const NoInternetConnectionPage(),
+                      ),
+                    )
+                  : const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+            )
+          : const NoInternetConnectionPage(),
     );
   }
 }

@@ -858,7 +858,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: f5b2e8f56d5cc7ffbbbc2ee0be8b39cb0a265ddd
+      resolved-ref: "6f6e97367d8d20b6611712675898223e5266631c"
       url: "https://github.com/yashasvis/visuals_calendar.git"
     source: git
     version: "0.0.4"

@@ -31,7 +31,7 @@ DateTime? eventStartDate;
 DateTime? eventEndDate;
 bool isLoading = false;
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
 
@@ -48,8 +48,7 @@ void main() async{
   if (Platform.isAndroid) {
     FlutterBackgroundService().startService();
     FlutterBackgroundService().invoke('setAsForeground');
-  }
-  else{
+  } else {
     tz.initializeTimeZones();
     await NotificationService.init();
   }
@@ -92,9 +91,10 @@ class _MyHomePageState extends State<MyHomePage> {
     int isLoggedIn = 0;
     isLoggedIn = preferences.getInt('isLoggedIn') ?? 0;
     String loggedDate = preferences.getString('LoggedDate') ?? '';
-    if(loggedDate != ""){
-      DateTime dateTime = DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
-      if(dateTime.isAfter(DateTime.parse(loggedDate))){
+    if (loggedDate != "") {
+      DateTime dateTime =
+          DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
+      if (dateTime.isAfter(DateTime.parse(loggedDate))) {
         preferences.remove('LoggedDate');
 
         Navigator.of(context).push(
@@ -103,45 +103,55 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
 
-    if(preferences.containsKey('HasScheduleWorkStarted')){
-      var hasScheduleWorkStarted = preferences.getBool('HasScheduleWorkStarted') ?? false;
-      if(hasScheduleWorkStarted){
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => CountdownWidget(countdownNotifier,navigatorKey)),
-        );
+    if (preferences.containsKey('HasScheduleWorkStarted')) {
+      preferences.reload();
+      var hasScheduleWorkStarted =
+          preferences.getBool('HasScheduleWorkStarted') ?? false;
+      if (hasScheduleWorkStarted) {
+        preferences.reload();
+        if (!preferences.containsKey('alreadyRedirected')) {
+          preferences.setBool('alreadyRedirected', true);
+          Navigator.of(context).push(
+            MaterialPageRoute(
+                builder: (_) =>
+                    CountdownWidget(countdownNotifier, navigatorKey)),
+          );
+        }
       }
     }
 
-    if(eventStartDate != null){
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => CountdownWidget(countdownNotifier,navigatorKey)),
-      );
-    }
-    else{
-      if (isLoggedIn > 0){
+    if (eventStartDate != null) {
+      preferences.reload();
+      if (!preferences.containsKey('alreadyRedirected')) {
+        preferences.setBool('alreadyRedirected', true);
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => CalendarPage("",navigatorKey)),
+          MaterialPageRoute(
+              builder: (_) => CountdownWidget(countdownNotifier, navigatorKey)),
         );
       }
-      else {
+    } else {
+      if (isLoggedIn > 0) {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => CalendarPage("", navigatorKey)),
+        );
+      } else {
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => LoginPage(navigatorKey)),
         );
       }
     }
 
-    FlutterBackgroundService()
-        .on("showCountdownPage")
-        .listen((event) async {
+    FlutterBackgroundService().on("showCountdownPage").listen((event) async {
       if (!mounted) return;
 
       SharedPreferences preferences = await SharedPreferences.getInstance();
       preferences.reload();
 
       String loggedDate = preferences.getString('LoggedDate') ?? '';
-      if(loggedDate != ""){
-        DateTime dateTime = DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
-        if(dateTime.isAfter(DateTime.parse(loggedDate))){
+      if (loggedDate != "") {
+        DateTime dateTime =
+            DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
+        if (dateTime.isAfter(DateTime.parse(loggedDate))) {
           preferences.remove('LoggedDate');
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => LoginPage(navigatorKey)),
@@ -149,7 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       }
 
-      if(eventStartDate != null) {
+      if (eventStartDate != null) {
         if (!DateTime.now().isAfter(eventStartDate!)) {
           DateTime eventStart = eventStartDate!.toLocal();
           countdownNotifier.value = eventStart.difference(DateTime.now());
@@ -157,7 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
 
       preferences.reload();
-      if(!preferences.containsKey('alreadyRedirected')){
+      if (!preferences.containsKey('alreadyRedirected')) {
         preferences.setBool('alreadyRedirected', true);
         navigatorKey.currentState?.push(
           MaterialPageRoute(
@@ -176,7 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (Platform.isIOS) {
       Timer.periodic(
         const Duration(seconds: 5),
-            (_) => fetchUpcomingMeeting(),
+        (_) => fetchUpcomingMeeting(),
       );
     }
   }
@@ -196,7 +206,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-Future<void> initializeServices() async{
+Future<void> initializeServices() async {
   const notificationId = 888;
   var service = FlutterBackgroundService();
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -208,9 +218,11 @@ Future<void> initializeServices() async{
   );
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
-  await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
   await service.configure(
@@ -229,42 +241,43 @@ Future<void> initializeServices() async{
 
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
-  if(service is AndroidServiceInstance){
-    service.on("setAsForeground").listen((event){
+  if (service is AndroidServiceInstance) {
+    service.on("setAsForeground").listen((event) {
       service.setAsForegroundService();
     });
-    service.on("setAsBackground").listen((event){
+    service.on("setAsBackground").listen((event) {
       service.setAsBackgroundService();
     });
   }
 
-  service.on("stopService").listen((event){
+  service.on("stopService").listen((event) {
     service.stopSelf();
   });
 
-  Timer.periodic(const Duration(seconds: 1),(timer) async {
+  Timer.periodic(const Duration(seconds: 1), (timer) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     preferences.reload();
-    if(eventStartDate != null){
+    if (eventStartDate != null) {
       if (!DateTime.now().isAfter(eventStartDate!)) {
         DateTime eventStart = eventStartDate!.toLocal();
         countdownNotifier.value = eventStart.difference(DateTime.now());
-      }
-      else{
+      } else {
         isLoading = false;
         lastShownNotification = [];
         eventStartDate = null;
       }
     }
 
-    if(lastShownNotification.isNotEmpty){
+    if (lastShownNotification.isNotEmpty) {
       var isLoggedIn = preferences.getInt('isLoggedIn') ?? 0;
       var isTimerShown = preferences.getBool('isTimerShown') ?? false;
-      bool isMeetingRunningOver = isTimerShown ? preferences.getBool('isMeetingRunningOver') ?? false : false;
+      bool isMeetingRunningOver = isTimerShown
+          ? preferences.getBool('isMeetingRunningOver') ?? false
+          : false;
       preferences.setBool('HasNextMeetingAdded', true);
-      if(isLoggedIn > 0) {
-        if(!isMeetingRunningOver){
-          if(!isTimerShown){
+      if (isLoggedIn > 0) {
+        if (!isMeetingRunningOver) {
+          if (!isTimerShown) {
             service.invoke("showCountdownPage");
           }
         }
@@ -272,17 +285,18 @@ void onStart(ServiceInstance service) async {
     }
   });
 
-  Timer.periodic(const Duration(seconds: 5),(timer) async {
+  Timer.periodic(const Duration(seconds: 5), (timer) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     preferences.reload();
-    if(service is AndroidServiceInstance) {
-      if(lastShownNotification.isEmpty){
+    if (service is AndroidServiceInstance) {
+      if (lastShownNotification.isEmpty) {
         var isLoggedIn = preferences.getInt('isLoggedIn') ?? 0;
-        if(isLoggedIn > 0){
+        if (isLoggedIn > 0) {
           final Config config = Config(
             tenant: "common",
             clientId: "fd5ccd50-5603-4e29-b149-2bedc44a3a89",
-            scope: "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
+            scope:
+                "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
             navigatorKey: navigatorKey,
             redirectUri: ThemeModel.baseUrl,
             prompt: "consent",
@@ -291,31 +305,35 @@ void onStart(ServiceInstance service) async {
           final AadOAuth oauth = AadOAuth(config);
           String? token = await oauth.getAccessToken();
 
-          if(token != null){
+          if (token != null) {
             DateTime startDate = DateTime.now();
-            DateTime endDate = DateTime.now().add(const Duration(minutes: 5,seconds: 8));
+            DateTime endDate =
+                DateTime.now().add(const Duration(minutes: 5, seconds: 8));
 
-            final startUtc = '${startDate.toUtc().toIso8601String().split('.').first}Z';
-            final endUtc   = '${endDate.toUtc().toIso8601String().split('.').first}Z';
+            final startUtc =
+                '${startDate.toUtc().toIso8601String().split('.').first}Z';
+            final endUtc =
+                '${endDate.toUtc().toIso8601String().split('.').first}Z';
             final dio = Dio();
-            final response = await dio.get("https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=$startUtc&endDateTime=$endUtc",
-              options: Options(headers: {
-                "Authorization": "Bearer $token"
-              }),
+            final response = await dio.get(
+              "https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=$startUtc&endDateTime=$endUtc",
+              options: Options(headers: {"Authorization": "Bearer $token"}),
             );
 
             final data = response.data;
             final List<dynamic> eventList = data['value'] ?? [];
             var events = eventList
-                .map((e) => CalendarEventsModel.fromJson(e as Map<String, dynamic>))
+                .map((e) =>
+                    CalendarEventsModel.fromJson(e as Map<String, dynamic>))
                 .toList();
-            if(events.isNotEmpty){
+            if (events.isNotEmpty) {
               for (var e in events) {
-                if(e.isDraft == false && !lastShownNotification.contains(e.id)){
+                if (e.isDraft == false &&
+                    !lastShownNotification.contains(e.id)) {
                   var location = "";
                   var content = e.body['content'];
                   bool isMeetingJoining = false;
-                  if(content.toString().contains("Join online meeting")){
+                  if (content.toString().contains("Join online meeting")) {
                     dom.Document document = html.parse(content.toString());
 
                     document.body!.querySelectorAll("*").forEach((element) {
@@ -330,17 +348,17 @@ void onStart(ServiceInstance service) async {
 
                     content = document.body!.innerHtml;
                   }
-                  if(e.location.isNotEmpty){
-                    var locations = e.location.containsKey('displayName') ? true : false;
+                  if (e.location.isNotEmpty) {
+                    var locations =
+                        e.location.containsKey('displayName') ? true : false;
                     var meeting = locations ? e.location['displayName'] : "";
                     location = meeting;
                   }
 
-                  if(isMeetingJoining){
+                  if (isMeetingJoining) {
                     var meetingUrl = e.onlineMeeting!['joinUrl'];
-                    preferences.setString('meetingUrl',meetingUrl);
-                  }
-                  else{
+                    preferences.setString('meetingUrl', meetingUrl);
+                  } else {
                     preferences.remove('meetingUrl');
                   }
 
@@ -350,23 +368,25 @@ void onStart(ServiceInstance service) async {
 
                   lastShownNotification.add(e.id);
 
-                  eventStartDate = DateTime.parse(e.start['dateTime']+"Z");
-                  eventEndDate = DateTime.parse(e.end['dateTime']+"Z");
+                  eventStartDate = DateTime.parse(e.start['dateTime'] + "Z");
+                  eventEndDate = DateTime.parse(e.end['dateTime'] + "Z");
 
-                  preferences.setString('eventEndDate', eventEndDate.toString());
-                  preferences.setString('eventStartDate', eventStartDate.toString());
+                  preferences.setString(
+                      'eventEndDate', eventEndDate.toString());
+                  preferences.setString(
+                      'eventStartDate', eventStartDate.toString());
 
-                  bool hasScheduleWorkStarted = preferences.getBool('HasScheduleWorkStarted') ?? false;
-                  if(hasScheduleWorkStarted){
-                    preferences.setBool('HasNextMeetingAdded',true);
+                  bool hasScheduleWorkStarted =
+                      preferences.getBool('HasScheduleWorkStarted') ?? false;
+                  if (hasScheduleWorkStarted) {
+                    preferences.setBool('HasNextMeetingAdded', true);
                   }
                 }
               }
             }
           }
         }
-      }
-      else{
+      } else {
         preferences.setBool('HasNextMeetingAdded', true);
       }
     }
@@ -379,7 +399,8 @@ Future<void> fetchUpcomingMeeting() async {
   final Config config = Config(
     tenant: "common",
     clientId: "fd5ccd50-5603-4e29-b149-2bedc44a3a89",
-    scope: "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
+    scope:
+        "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
     navigatorKey: navigatorKey,
     redirectUri: ThemeModel.baseUrl,
     prompt: "consent",
@@ -395,8 +416,8 @@ Future<void> fetchUpcomingMeeting() async {
   final dio = Dio();
   final response = await dio.get(
     "https://graph.microsoft.com/v1.0/me/calendarView"
-        "?startDateTime=${start.toUtc().toIso8601String()}"
-        "&endDateTime=${end.toUtc().toIso8601String()}",
+    "?startDateTime=${start.toUtc().toIso8601String()}"
+    "&endDateTime=${end.toUtc().toIso8601String()}",
     options: Options(headers: {"Authorization": "Bearer $token"}),
   );
 
@@ -410,11 +431,11 @@ Future<void> fetchUpcomingMeeting() async {
 
   eventStartDate = DateTime.parse(e.start['dateTime'] + "Z");
   eventEndDate = DateTime.parse(e.end['dateTime'] + "Z");
-  if(e.isDraft == false && !lastShownNotification.contains(e.id)){
+  if (e.isDraft == false && !lastShownNotification.contains(e.id)) {
     var location = "";
     var content = e.body['content'];
     bool isMeetingJoining = false;
-    if(content.toString().contains("Join online meeting")){
+    if (content.toString().contains("Join online meeting")) {
       dom.Document document = html.parse(content.toString());
 
       document.body!.querySelectorAll("*").forEach((element) {
@@ -429,17 +450,16 @@ Future<void> fetchUpcomingMeeting() async {
 
       content = document.body!.innerHtml;
     }
-    if(e.location.isNotEmpty){
+    if (e.location.isNotEmpty) {
       var locations = e.location.containsKey('displayName') ? true : false;
       var meeting = locations ? e.location['displayName'] : "";
       location = meeting;
     }
 
-    if(isMeetingJoining){
+    if (isMeetingJoining) {
       var meetingUrl = e.onlineMeeting!['joinUrl'];
-      preferences.setString('meetingUrl',meetingUrl);
-    }
-    else{
+      preferences.setString('meetingUrl', meetingUrl);
+    } else {
       preferences.remove('meetingUrl');
     }
 
@@ -449,31 +469,32 @@ Future<void> fetchUpcomingMeeting() async {
 
     lastShownNotification.add(e.id);
 
-    eventStartDate = DateTime.parse(e.start['dateTime']+"Z");
-    eventEndDate = DateTime.parse(e.end['dateTime']+"Z");
+    eventStartDate = DateTime.parse(e.start['dateTime'] + "Z");
+    eventEndDate = DateTime.parse(e.end['dateTime'] + "Z");
 
     preferences.setString('eventEndDate', eventEndDate.toString());
     preferences.setString('eventStartDate', eventStartDate.toString());
 
-    bool hasScheduleWorkStarted = preferences.getBool('HasScheduleWorkStarted') ?? false;
-    if(hasScheduleWorkStarted){
-      preferences.setBool('HasNextMeetingAdded',true);
+    bool hasScheduleWorkStarted =
+        preferences.getBool('HasScheduleWorkStarted') ?? false;
+    if (hasScheduleWorkStarted) {
+      preferences.setBool('HasNextMeetingAdded', true);
     }
   }
   preferences.setString('eventStartDate', eventStartDate.toString());
   preferences.setString('eventEndDate', eventEndDate.toString());
 
   if (navigatorKey.currentState != null) {
-    countdownNotifier.value =
-        eventStartDate!.difference(DateTime.now());
+    countdownNotifier.value = eventStartDate!.difference(DateTime.now());
 
     SharedPreferences preferences = await SharedPreferences.getInstance();
     preferences.reload();
 
     String loggedDate = preferences.getString('LoggedDate') ?? '';
-    if(loggedDate != ""){
-      DateTime dateTime = DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
-      if(dateTime.isAfter(DateTime.parse(loggedDate))){
+    if (loggedDate != "") {
+      DateTime dateTime =
+          DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
+      if (dateTime.isAfter(DateTime.parse(loggedDate))) {
         preferences.remove('LoggedDate');
         navigatorKey.currentState?.push(
           MaterialPageRoute(builder: (_) => LoginPage(navigatorKey)),
@@ -481,7 +502,7 @@ Future<void> fetchUpcomingMeeting() async {
       }
     }
 
-    if(eventStartDate != null) {
+    if (eventStartDate != null) {
       if (!DateTime.now().isAfter(eventStartDate!)) {
         DateTime eventStart = eventStartDate!.toLocal();
         countdownNotifier.value = eventStart.difference(DateTime.now());
@@ -489,8 +510,17 @@ Future<void> fetchUpcomingMeeting() async {
     }
 
     preferences.reload();
-    if(!preferences.containsKey('alreadyRedirected')){
+    if (!preferences.containsKey('alreadyRedirected')) {
       preferences.setBool('alreadyRedirected', true);
+      final bool isAfterStart = DateTime.now().isAfter(eventStartDate!) ||
+          DateTime.now().isAtSameMomentAs(eventStartDate!);
+      final bool isBeforeEnd = DateTime.now().isBefore(eventEndDate!) ||
+          DateTime.now().isAtSameMomentAs(eventEndDate!);
+      if (isAfterStart && isBeforeEnd) {
+        preferences.setBool('currentHasScheduleWorkStarted', true);
+        preferences.setBool('HasScheduleWorkStarted', true);
+      }
+
       navigatorKey.currentState?.push(
         MaterialPageRoute(
           builder: (_) => CountdownWidget(countdownNotifier, navigatorKey),
