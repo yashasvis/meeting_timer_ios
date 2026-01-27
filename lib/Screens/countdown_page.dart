@@ -442,6 +442,7 @@ class _CountdownWidgetState extends State<CountdownWidget> {
                                         preference.remove('alreadyRedirected');
                                         if(currentEndDate != null)
                                           preference.setString('meetingOverTime', currentEndDate!);
+                                          
 
                                         widget.navigatorKey.currentState?.push(
                                           MaterialPageRoute(
