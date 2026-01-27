@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:ios_calendar_demo/Screens/calendar_page.dart';
 import 'package:keep_screen_on/keep_screen_on.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
 
 import '../Model/app_theme.dart';
 import 'no_internet_connection_page.dart';
@@ -135,6 +136,17 @@ class _LoginPage extends State<LoginPage> {
                           await SharedPreferences.getInstance();
                           await preferences.setInt('isLoggedIn', 1);
 
+                          final profile = await fetchMicrosoftUserProfile(token.accessToken!); 
+                          
+                          final String firstName = profile['givenName'] ?? ''; 
+                          final String lastName = profile['surname'] ?? ''; 
+                          final String email = 
+                              profile['mail'] ?? profile['userPrincipalName'] ?? '';
+
+                          await preferences.setString('firstName', firstName); 
+                          await preferences.setString('lastName', lastName); 
+                          await preferences.setString('email', email);
+
                           if (context.mounted) {
                             Navigator.of(context).push(
                               MaterialPageRoute(
@@ -172,4 +184,19 @@ class _LoginPage extends State<LoginPage> {
       ),
     ): const NoInternetConnectionPage();
   }
+}
+
+Future<Map<String, dynamic>> fetchMicrosoftUserProfile(String accessToken) async { 
+  final dio = Dio(); 
+ 
+  final response = await dio.get( 
+    'https://graph.microsoft.com/v1.0/me', 
+    options: Options( 
+      headers: { 
+        'Authorization': 'Bearer $accessToken', 
+      }, 
+    ), 
+  ); 
+ 
+  return response.data; 
 }

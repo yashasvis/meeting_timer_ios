@@ -511,21 +511,31 @@ Future<void> fetchUpcomingMeeting() async {
 
     preferences.reload();
     if (!preferences.containsKey('alreadyRedirected')) {
-      preferences.setBool('alreadyRedirected', true);
       final bool isAfterStart = DateTime.now().isAfter(eventStartDate!) ||
           DateTime.now().isAtSameMomentAs(eventStartDate!);
       final bool isBeforeEnd = DateTime.now().isBefore(eventEndDate!) ||
           DateTime.now().isAtSameMomentAs(eventEndDate!);
-      if (isAfterStart && isBeforeEnd) {
+      var meetingOverTime = preferences.containsKey('meetingOverTime') ? preferences.getString('meetingOverTime') : '';
+      if(meetingOverTime != ''){
+        if(DateTime.parse(meetingOverTime!).isBefore(eventStartDate!)){
+          meetingOverTime = '';
+          preferences.remove('meetingOverTime');
+        }
+      }
+      
+      if (isAfterStart && isBeforeEnd && meetingOverTime == '') {
         preferences.setBool('currentHasScheduleWorkStarted', true);
         preferences.setBool('HasScheduleWorkStarted', true);
       }
 
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (_) => CountdownWidget(countdownNotifier, navigatorKey),
-        ),
-      );
+      if(meetingOverTime == ''){
+        preferences.setBool('alreadyRedirected', true);
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) => CountdownWidget(countdownNotifier, navigatorKey),
+          ),
+        );
+      }
     }
   }
 }

@@ -21,6 +21,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:visuals_calendar/types/calendar_format.types.dart';
 import 'package:visuals_calendar/types/event.types.dart';
 import 'package:visuals_calendar/visuals_calendar.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../Model/app_theme.dart';
 import 'no_internet_connection_page.dart';
@@ -41,12 +42,14 @@ class _CalendarPage extends State<CalendarPage> {
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
   bool isCalendarLoading = false;
   bool isLoaded = false;
+  String version='',firstName='',lastName='',email='';
   DateTime focusedDay = DateTime.now();
   DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now();
   List<CalendarEventsModel> events = [];
   final GlobalKey<VisualsCalendarState> _calendarKey = GlobalKey();
   var currentCalendarFormat = CalendarFormat.day;
+  final GlobalKey _scaffoldKey = GlobalKey();
 
   final Map<String, Color> categoryColors = {
     "default": Colors.blue,
@@ -103,6 +106,12 @@ class _CalendarPage extends State<CalendarPage> {
   }
 
   void showTimer() async {
+    PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
+      version = packageInfo.version;
+      setState(() {
+
+      });
+    });
     Timer.periodic(const Duration(seconds: 2), (timer) async {
       SharedPreferences preferences = await SharedPreferences.getInstance();
       preferences.reload();
@@ -235,7 +244,12 @@ class _CalendarPage extends State<CalendarPage> {
   void _getCalendarEvents() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String loggedDate = preferences.getString('LoggedDate') ?? '';
-
+    firstName = preferences.getString('firstName') ?? '';
+    lastName = preferences.getString('lastName') ?? '';
+    email = preferences.getString('email') ?? '';
+    setState(() {
+      
+    });
     if (loggedDate != "") {
       DateTime dateTime =
           DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
@@ -480,8 +494,112 @@ class _CalendarPage extends State<CalendarPage> {
       },
       child: _connectionStatus != ConnectivityResult.none
           ? Scaffold(
-              backgroundColor: Colors.white,
-              body: isLoaded
+                key:_scaffoldKey,
+                backgroundColor: Colors.white,
+                drawer: Drawer( 
+                  child: ListView( 
+                    padding: EdgeInsets.zero, 
+                    children: [ 
+                      DrawerHeader( 
+                        decoration: BoxDecoration(color: Colors.blue.shade300,), 
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                          Text('$firstName $lastName',style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            overflow: TextOverflow.clip,
+                            fontWeight: FontWeight.bold
+                          ),),
+                          Text(email,style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            overflow: TextOverflow.clip,
+                            fontWeight: FontWeight.bold
+                          ),)
+                        ],)
+                      ), 
+                      ListTile( 
+                        leading: const Icon(Icons.logout), 
+                        title: const Text('Logout'), 
+                        onTap: () async {
+                          try {
+                            SharedPreferences
+                                preferences =
+                                await SharedPreferences
+                                    .getInstance();
+                            preferences
+                                .remove('isLoggedIn');
+
+                            final Config config = Config(
+                              tenant: "common",
+                              clientId:
+                                  "fd5ccd50-5603-4e29-b149-2bedc44a3a89",
+                              scope:
+                                  "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
+                              navigatorKey:
+                                  widget.navigatorKey,
+                              redirectUri:
+                                  ThemeModel.baseUrl,
+                              loader: const Center(
+                                child:
+                                    CircularProgressIndicator(),
+                              ),
+                              postLogoutRedirectUri:
+                                  ThemeModel.baseUrl,
+                              customParameters: {
+                                'prompt': 'login',
+                                // 'amr_values': 'mfa',
+                                'login_hint': '',
+                                'max_age':
+                                    '0', // Forces fresh authentication
+                              },
+                              prompt: "login",
+                            );
+
+                            final AadOAuth oauth =
+                                AadOAuth(config);
+                            await oauth.logout();
+                            await oauth.logout();
+
+                            SharedPreferences preference =
+                                await SharedPreferences
+                                    .getInstance();
+                            preference.clear();
+
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      LoginPage(widget
+                                          .navigatorKey)),
+                            );
+                          } catch (e) {
+                            if (kDebugMode) {
+                              print(e);
+                            }
+                          }
+                        },   
+                      ), 
+                      const Divider(),
+                      Container(
+                        width: screenSize.width,
+                        margin: EdgeInsets.only(bottom: screenSize.height * 0.01,top: screenSize.height * 0.01),
+                        padding: EdgeInsets.zero,
+                        child: Text(
+                          "Version $version",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Cabin-Bold',
+                            fontSize: 14,
+                            color: Colors.blue.shade400
+                          ),
+                        ),
+                      )
+                    ], 
+                  ), 
+                ),
+                body: isLoaded
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -518,6 +636,25 @@ class _CalendarPage extends State<CalendarPage> {
                                       title,
                                       style:
                                           const TextStyle(color: Colors.white),
+                                    ),
+                                    leading: IconButton( 
+                                      icon: const Icon(Icons.menu, color: Colors.white), 
+                                      onPressed: () { 
+                                        Scaffold.of(context).openDrawer(); 
+                                      }, 
+                                    ),
+                                    bottom: PreferredSize(
+                                      preferredSize: const Size.fromHeight(56),
+                                      child: _calendarFormatSelector(
+                                        format,
+                                            (newFormat) {
+                                          onFormatChanged(newFormat);
+
+                                          setState(() {
+                                            currentCalendarFormat = newFormat;
+                                          });
+                                        },
+                                      ),
                                     ),
                                     actions: [
                                       IconButton(
@@ -615,103 +752,7 @@ class _CalendarPage extends State<CalendarPage> {
                                           }
                                         },
                                       ),
-                                      Padding(
-                                          padding: EdgeInsets.zero,
-                                          child: TextButton(
-                                              style: TextButton.styleFrom(
-                                                  padding: EdgeInsets.zero,
-                                                  minimumSize: Size.zero),
-                                              onPressed: () async {
-                                                try {
-                                                  SharedPreferences
-                                                      preferences =
-                                                      await SharedPreferences
-                                                          .getInstance();
-                                                  preferences
-                                                      .remove('isLoggedIn');
-
-                                                  final Config config = Config(
-                                                    tenant: "common",
-                                                    clientId:
-                                                        "fd5ccd50-5603-4e29-b149-2bedc44a3a89",
-                                                    scope:
-                                                        "openid profile offline_access User.Read Calendars.ReadWrite Calendars.Read",
-                                                    navigatorKey:
-                                                        widget.navigatorKey,
-                                                    redirectUri:
-                                                        ThemeModel.baseUrl,
-                                                    loader: const Center(
-                                                      child:
-                                                          CircularProgressIndicator(),
-                                                    ),
-                                                    postLogoutRedirectUri:
-                                                        ThemeModel.baseUrl,
-                                                    customParameters: {
-                                                      'prompt': 'login',
-                                                      // 'amr_values': 'mfa',
-                                                      'login_hint': '',
-                                                      'max_age':
-                                                          '0', // Forces fresh authentication
-                                                    },
-                                                    prompt: "login",
-                                                  );
-
-                                                  final AadOAuth oauth =
-                                                      AadOAuth(config);
-                                                  await oauth.logout();
-                                                  await oauth.logout();
-
-                                                  SharedPreferences preference =
-                                                      await SharedPreferences
-                                                          .getInstance();
-                                                  preference.clear();
-
-                                                  Navigator.of(context).push(
-                                                    MaterialPageRoute(
-                                                        builder: (_) =>
-                                                            LoginPage(widget
-                                                                .navigatorKey)),
-                                                  );
-                                                } catch (e) {
-                                                  if (kDebugMode) {
-                                                    print(e);
-                                                  }
-                                                }
-                                              },
-                                              child: Center(
-                                                child: Row(
-                                                  children: [
-                                                    Padding(
-                                                      padding: EdgeInsets.only(
-                                                        left: screenSize.width *
-                                                            0.01,
-                                                      ),
-                                                      child: const Icon(
-                                                        Icons.login,
-                                                        size: 24,
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                    Padding(
-                                                      padding: EdgeInsets.only(
-                                                          left:
-                                                              screenSize.width *
-                                                                  0.02,
-                                                          right:
-                                                              screenSize.width *
-                                                                  0.02),
-                                                      child: const Text(
-                                                        "Logout",
-                                                        style: TextStyle(
-                                                            fontSize: 16,
-                                                            color:
-                                                                Colors.white),
-                                                      ),
-                                                    )
-                                                  ],
-                                                ),
-                                              )))
-                                    ],
+                                   ],
                                   );
                                 },
                               ),
@@ -727,4 +768,46 @@ class _CalendarPage extends State<CalendarPage> {
           : const NoInternetConnectionPage(),
     );
   }
+}
+
+Widget _calendarFormatSelector(
+    CalendarFormat current,
+    Function(CalendarFormat) onChanged,
+    ) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    child: SegmentedButton<CalendarFormat>(
+      style: SegmentedButton.styleFrom(
+        backgroundColor: Colors.blue.shade100,
+        foregroundColor: Colors.black,
+        selectedBackgroundColor: Colors.blue.shade200,
+        selectedForegroundColor: Colors.white,
+        textStyle: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w500
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        side: BorderSide(color: Colors.blue.shade100, width: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 8)
+      ),
+      segments: const [
+        ButtonSegment(
+          value: CalendarFormat.day,
+          label: Text('Day'),
+        ),
+        ButtonSegment(
+          value: CalendarFormat.threeDays,
+          label: Text('3 Days'),
+        ),
+        ButtonSegment(
+          value: CalendarFormat.week,
+          label: Text('Week'),
+        ),
+      ],
+      selected: {current},
+      onSelectionChanged: (value) {
+        onChanged(value.first);
+      },
+    ),
+  );
 }

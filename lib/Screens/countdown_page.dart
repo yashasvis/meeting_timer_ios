@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:intl/intl.dart';
-import 'package:ios_calendar_demo/main.dart';
 import 'package:keep_screen_on/keep_screen_on.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -211,7 +210,6 @@ class _CountdownWidgetState extends State<CountdownWidget> {
 
   @override
   Widget build(BuildContext context) {
-    Size screenSize = MediaQuery.of(context).size;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -306,7 +304,7 @@ class _CountdownWidgetState extends State<CountdownWidget> {
                               const SizedBox(height: 20),
 
                               /// ---------------- COUNTDOWN ----------------
-                              if (!isMeetingStarted)
+                              if (!isMeetingStarted && widget.countdownNotifier != null)
                                 ValueListenableBuilder<Duration?>(
                                   valueListenable: widget.countdownNotifier,
                                   builder: (context, duration, _) {
@@ -322,7 +320,7 @@ class _CountdownWidgetState extends State<CountdownWidget> {
                                       });
                                     }
 
-                                    return CircularCountDownTimer(
+                                    return duration.inSeconds >= 0 ?CircularCountDownTimer(
                                       duration: duration.inSeconds,
                                       controller: _controller,
                                       width: 210,
@@ -339,7 +337,7 @@ class _CountdownWidgetState extends State<CountdownWidget> {
                                       textFormat: CountdownTextFormat.MM_SS,
                                       isReverse: true,
                                       autoStart: true,
-                                    );
+                                    ) : const Padding(padding: EdgeInsets.zero);
                                   },
                                 ),
 
@@ -418,6 +416,7 @@ class _CountdownWidgetState extends State<CountdownWidget> {
                                           isMeetingRunningOver = false;
                                         });
                                         SharedPreferences preference = await SharedPreferences.getInstance();
+                                        var currentEndDate = preference.getString('currentEndDate');
                                         preference.reload();
                                         preference.remove('HasScheduleWorkStarted');
 
@@ -438,7 +437,11 @@ class _CountdownWidgetState extends State<CountdownWidget> {
                                         preference.setBool('isTimerShown', false);
                                         preference.setBool('hasNextMeetingAdded', false);
                                         preference.setBool('isMeetingRunningOver', false);
+                                        preference.setBool('currentHasScheduleWorkStarted', false);
+                                        preference.setBool('HasScheduleWorkStarted', false);
                                         preference.remove('alreadyRedirected');
+                                        if(currentEndDate != null)
+                                          preference.setString('meetingOverTime', currentEndDate!);
 
                                         widget.navigatorKey.currentState?.push(
                                           MaterialPageRoute(

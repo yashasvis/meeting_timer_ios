@@ -4,7 +4,7 @@ description: "A new Flutter project."
 
 publish_to: 'none'
 
-version: 1.0.0+5
+version: 1.0.0+6
 
 environment: 
   sdk: ">=3.4.1 <4.0.0"
@@ -36,6 +36,7 @@ dependencies:
   timezone: ^0.10.1
   flutter_native_splash: ^2.4.7
   #visuals_calendar: ^0.0.4
+  package_info_plus: ^9.0.0
 
 flutter_launcher_icons:
   ios: true
